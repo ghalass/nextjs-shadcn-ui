@@ -1,10 +1,16 @@
 // app/api/auth/logout/route.ts
 
+import { logout } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function POST() {
   try {
-    const response = NextResponse.json({ ok: true });
+    const response = NextResponse.json({
+      success: true,
+      message: "Logged out",
+    });
+
+    await logout();
 
     // Supprimer le cookie
     response.cookies.set({

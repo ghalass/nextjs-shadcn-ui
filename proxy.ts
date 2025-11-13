@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyJwt } from "@/lib/jwt"; // doit renvoyer le payload du token (user)
+// import { verifyJwt } from "@/lib/jwt"; // doit renvoyer le payload du token (user)
+import { getSession } from "./lib/auth";
 
 const routePermissions: Record<string, string[]> = {
   "/api/users": ["USER", "ADMIN", "SUPER_ADMIN"],
   "/api/sites": ["USER", "ADMIN", "SUPER_ADMIN"],
 };
 
-export function proxy(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
+export async function proxy(req: NextRequest) {
+  // const token = req.cookies.get("token")?.value;
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith("/api/");
+  const session = await getSession();
 
   const publicPaths = [
-    "/",
-    "/about",
-    "/users",
+    // "/",
+    // "/about",
     "/login",
     "/register",
     "/api/users",
@@ -32,17 +33,26 @@ export function proxy(req: NextRequest) {
     )
   ) {
     if (
-      token &&
-      verifyJwt(token) &&
+      session.isLoggedIn &&
       (pathname === "/login" || pathname === "/register")
     ) {
       return NextResponse.redirect(new URL("/", req.url));
     }
+    // if (
+    //   token &&
+    //   verifyJwt(token) &&
+    //   (pathname === "/login" || pathname === "/register")
+    // ) {
+    //   return NextResponse.redirect(new URL("/", req.url));
+    // }
+
     return NextResponse.next();
   }
 
   // 🔒 Routes privées
-  const decoded = token ? verifyJwt(token) : null;
+  // const decoded = token ? verifyJwt(token) : null;
+
+  const decoded = session.isLoggedIn ? session : null;
 
   if (!decoded) {
     if (isApi) {

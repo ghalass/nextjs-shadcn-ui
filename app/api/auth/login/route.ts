@@ -3,7 +3,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { signJwt } from "@/lib/jwt";
+// import { signJwt } from "@/lib/jwt";
+import { getSession, verifyPassword } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -19,12 +20,16 @@ export async function POST(req: Request) {
     }
 
     // 🔹 Vérifier le mot de passe avec le salt
-    const passwordMatches = await bcrypt.compare(
-      password + user.salt,
-      user.password
-    );
+    // const passwordMatches = await bcrypt.compare(
+    //   password + user.salt,
+    //   user.password
+    // );
 
-    if (!passwordMatches) {
+    const isValid = await verifyPassword(password, user.salt, user.password);
+
+    console.log("isValid", isValid);
+
+    if (!isValid) {
       return NextResponse.json(
         { error: "Email ou mot de passe incorrect!" },
         { status: 401 }
@@ -32,20 +37,28 @@ export async function POST(req: Request) {
     }
 
     // 🔹 Génération du JWT
-    const token = signJwt({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    // const token = signJwt({
+    //   userId: user.id,
+    //   email: user.email,
+    //   role: user.role,
+    // });
 
-    const response = NextResponse.json({ message: "Logged in" });
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60, // 7 jours
-    });
+    const response = NextResponse.json({ user, message: "Logged in" });
+
+    const session = await getSession();
+    session.userId = user.id;
+    session.email = user.email;
+    session.role = user.role;
+    session.isLoggedIn = true;
+    await session.save();
+
+    // response.cookies.set("token", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   sameSite: "strict",
+    //   path: "/",
+    //   maxAge: 7 * 24 * 60 * 60, // 7 jours
+    // });
 
     return response;
   } catch (error) {
