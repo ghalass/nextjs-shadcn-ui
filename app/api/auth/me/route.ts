@@ -1,0 +1,35 @@
+// app/api/auth/me/route.ts
+
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
+import { verifyJwt } from "@/lib/jwt";
+
+export async function GET() {
+  try {
+    // ✅ await cookies() pour obtenir le cookieStore
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+
+    if (!token) return NextResponse.json({ user: null });
+
+    const decoded = verifyJwt(token) as { userId: string } | null;
+    if (!decoded) return NextResponse.json({ user: null }, { status: 401 });
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    return NextResponse.json({ user });
+  } catch (error) {
+    console.error(
+      "Erreur lors de récupération de l'utilisateur conncté:",
+      error
+    );
+    return NextResponse.json(
+      { error: "Erreur interne du serveur" },
+      { status: 500 }
+    );
+  }
+}
