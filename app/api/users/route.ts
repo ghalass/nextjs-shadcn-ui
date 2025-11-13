@@ -9,8 +9,7 @@ export async function GET() {
         id: true,
         email: true,
         name: true,
-        role: true,
-        active: true,
+        roles: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { email, name, password: hashedPassword, role },
+      data: { email, name, password: hashedPassword },
     });
 
     return NextResponse.json(user, { status: 201 });

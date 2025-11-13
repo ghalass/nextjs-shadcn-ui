@@ -57,3 +57,6 @@ pnpm add react-hot-toast
 pnpm add bcryptjs jsonwebtoken
 pnpm add -D @types/jsonwebtoken<!-- pnpm add yup -->
 pnpm add formik yup @hookform/resolvers yup-locales
+
+pnpm add -D ts-node typescript
+npx prisma db seed

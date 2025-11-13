@@ -10,8 +10,16 @@ export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { email } });
-
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        roles: {
+          include: {
+            role: true, // tu récupères Role.name, Role.id, etc.
+          },
+        },
+      },
+    });
     if (!user) {
       return NextResponse.json(
         { error: "Email ou mot de passe incorrect!" },
@@ -26,8 +34,6 @@ export async function POST(req: Request) {
     // );
 
     const isValid = await verifyPassword(password, user.salt, user.password);
-
-    console.log("isValid", isValid);
 
     if (!isValid) {
       return NextResponse.json(
@@ -48,7 +54,8 @@ export async function POST(req: Request) {
     const session = await getSession();
     session.userId = user.id;
     session.email = user.email;
-    session.role = user.role;
+    // ✅ convertir les rôles pour la session
+    session.roles = user.roles.map((r) => r.role.name);
     session.isLoggedIn = true;
     await session.save();
 

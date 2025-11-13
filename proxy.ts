@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-// import { verifyJwt } from "@/lib/jwt"; // doit renvoyer le payload du token (user)
 import { getSession } from "./lib/auth";
 
 const routePermissions: Record<string, string[]> = {
@@ -9,7 +8,6 @@ const routePermissions: Record<string, string[]> = {
 };
 
 export async function proxy(req: NextRequest) {
-  // const token = req.cookies.get("token")?.value;
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith("/api/");
   const session = await getSession();
@@ -38,20 +36,11 @@ export async function proxy(req: NextRequest) {
     ) {
       return NextResponse.redirect(new URL("/", req.url));
     }
-    // if (
-    //   token &&
-    //   verifyJwt(token) &&
-    //   (pathname === "/login" || pathname === "/register")
-    // ) {
-    //   return NextResponse.redirect(new URL("/", req.url));
-    // }
 
     return NextResponse.next();
   }
 
   // 🔒 Routes privées
-  // const decoded = token ? verifyJwt(token) : null;
-
   const decoded = session.isLoggedIn ? session : null;
 
   if (!decoded) {
@@ -63,8 +52,11 @@ export async function proxy(req: NextRequest) {
   }
 
   // ✅ Récupère le rôle utilisateur depuis le token
-  const userRole = decoded.role; // <--- ICI c’est ton "user"
+  const userRole = decoded.roles; // <--- ICI c’est ton "user"
+  // console.log(userRole);
 
+  const userRoles = Array.isArray(userRole) ? userRole : [userRole];
+  /*
   // 🔒 Vérifie les permissions pour les routes API
   if (isApi) {
     // Match aussi les sous-routes (ex: /api/users/123)
@@ -72,10 +64,14 @@ export async function proxy(req: NextRequest) {
       pathname.startsWith(path)
     )?.[1];
 
-    if (allowedRoles && !allowedRoles.includes(userRole)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (
+      allowedRoles &&
+      !allowedRoles.some((role) => userRoles.includes(role))
+    ) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
     }
   }
+  */
 
   return NextResponse.next();
 }

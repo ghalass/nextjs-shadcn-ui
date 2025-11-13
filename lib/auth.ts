@@ -23,7 +23,7 @@ export async function verifyPassword(
 export type SessionData = {
   userId: string;
   email: string;
-  role: string;
+  roles: string[];
   isLoggedIn: boolean;
 };
 

@@ -51,7 +51,7 @@ const SitesList = () => {
               <TableCell>{site.active ? "Actif" : "Inactif"}</TableCell>
               <TableCell className="text-right ">
                 <div className="flex gap-0.5 justify-end">
-                  <UpdateSite site={site} updateSite={updateSite} />
+                  {/* <UpdateSite site={site} updateSite={updateSite} /> */}
                   <DeleteSite site={site} deleteSite={deleteSite} />
                 </div>
               </TableCell>

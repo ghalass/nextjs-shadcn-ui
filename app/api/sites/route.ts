@@ -1,4 +1,6 @@
+import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasPermission } from "@/lib/rbac";
 import { NextResponse } from "next/server";
 
 const DELAY = 2000;
@@ -6,17 +8,11 @@ const DELAY = 2000;
 // ✅ GET /api/sites — récupérer tous les sites actifs
 export async function GET() {
   try {
-    // ✅ Simuler un délai de 2 secondes
-    await new Promise((resolve) => setTimeout(resolve, DELAY));
-
-    const sites = await prisma.site.findMany({
-      where: { active: true },
-      orderBy: { name: "asc" },
-    });
+    const sites = await prisma.site.findMany();
     return NextResponse.json(sites);
   } catch (error) {
     return NextResponse.json(
-      { error: "Impossible de fetch les sites" },
+      { error: "Erreur interne serveur" },
       { status: 500 }
     );
   }
@@ -27,6 +23,17 @@ export async function POST(req: Request) {
   try {
     // ✅ Simuler un délai de 2 secondes
     await new Promise((resolve) => setTimeout(resolve, DELAY));
+
+    const session = await getSession();
+    const userId = session?.userId;
+    if (!session?.isLoggedIn || !userId) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    const canCreate = await hasPermission(userId, "create", "sites");
+    if (!canCreate) {
+      return NextResponse.json({ error: "Interdit" }, { status: 403 });
+    }
 
     const body = await req.json();
 
