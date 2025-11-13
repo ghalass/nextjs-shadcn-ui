@@ -13,15 +13,15 @@ export async function POST() {
     await logout();
 
     // Supprimer le cookie
-    response.cookies.set({
-      name: "token",
-      value: "",
-      maxAge: 0,
-      path: "/", // très important pour supprimer le cookie sur tout le site
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+    // response.cookies.set({
+    //   name: "token",
+    //   value: "",
+    //   maxAge: 0,
+    //   path: "/", // très important pour supprimer le cookie sur tout le site
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production",
+    //   sameSite: "strict",
+    // });
 
     return response;
   } catch (error) {
