@@ -59,7 +59,8 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, permissionIds } = body;
+
+    const { name, description, permissions } = body;
 
     const existingRole = await prisma.role.findUnique({
       where: { id },
@@ -82,16 +83,16 @@ export async function PUT(request: NextRequest) {
     });
 
     // Mettre à jour les permissions si elles sont fournies
-    if (permissionIds !== undefined) {
+    if (permissions !== undefined) {
       // Supprimer les permissions existantes
       await prisma.rolePermission.deleteMany({
         where: { roleId: id },
       });
 
       // Ajouter les nouvelles permissions
-      if (permissionIds.length > 0) {
+      if (permissions.length > 0) {
         await prisma.rolePermission.createMany({
-          data: permissionIds.map((permissionId: string) => ({
+          data: permissions.map((permissionId: string) => ({
             roleId: id,
             permissionId,
           })),
