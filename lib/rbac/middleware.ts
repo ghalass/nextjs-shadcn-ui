@@ -1,7 +1,8 @@
 // lib/rbac/middleware.ts
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { hasPermission } from "./rbac";
+import { hasPermission } from "@/lib/rbac/core";
 import { getSession } from "../auth";
 
 /**

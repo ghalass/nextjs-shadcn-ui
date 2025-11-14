@@ -1,25 +1,41 @@
+// app/api/permissions/[permissionId]/roles/[roleId]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  assignPermissionToRole,
+  removePermissionFromRole,
+} from "@/lib/rbac/core";
+import { protectManageRoute } from "@/lib/rbac/middleware";
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { permissionId: string; roleId: string } }
 ) {
-  const { permissionId, roleId } = await params; // 🔹 attention : await pour App Router
+  // 🔒 Vérifier les permissions
+  const protectionError = await protectManageRoute(req, "permissions");
+  if (protectionError) return protectionError;
+
+  const { permissionId, roleId } = await params;
 
   try {
-    await prisma.rolePermission.create({
-      data: {
-        permission: { connect: { id: permissionId } },
-        role: { connect: { id: roleId } },
-      },
+    await assignPermissionToRole(roleId, permissionId);
+
+    return NextResponse.json({
+      message: "Permission assignée au rôle avec succès",
     });
-    return NextResponse.json({ message: "Role assigned to permission" });
   } catch (err) {
     console.error(err);
+
+    if (err instanceof Error && err.message.includes("Unique constraint")) {
+      return NextResponse.json(
+        { error: "Cette permission est déjà assignée à ce rôle" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Impossible d'assigner le rôle" },
-      { status: 400 }
+      { error: "Impossible d'assigner la permission au rôle" },
+      { status: 500 }
     );
   }
 }
@@ -28,21 +44,23 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { permissionId: string; roleId: string } }
 ) {
-  const { permissionId, roleId } = await params; // 🔹 await ici aussi
+  // 🔒 Vérifier les permissions
+  const protectionError = await protectManageRoute(req, "permissions");
+  if (protectionError) return protectionError;
+
+  const { permissionId, roleId } = await params;
 
   try {
-    await prisma.rolePermission.deleteMany({
-      where: {
-        permissionId,
-        roleId,
-      },
+    await removePermissionFromRole(roleId, permissionId);
+
+    return NextResponse.json({
+      message: "Permission retirée du rôle avec succès",
     });
-    return NextResponse.json({ message: "Role removed from permission" });
   } catch (err) {
     console.error(err);
     return NextResponse.json(
-      { error: "Impossible de retirer le rôle" },
-      { status: 400 }
+      { error: "Impossible de retirer la permission du rôle" },
+      { status: 500 }
     );
   }
 }

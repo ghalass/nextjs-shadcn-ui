@@ -41,8 +41,6 @@ const resourceOptions = [
   { value: "roles", label: "Rôles" },
   { value: "permissions", label: "Permissions" },
   { value: "sites", label: "Sites" },
-  { value: "posts", label: "Articles" },
-  { value: "analytics", label: "Analytiques" },
 ];
 
 export function PermissionForm({

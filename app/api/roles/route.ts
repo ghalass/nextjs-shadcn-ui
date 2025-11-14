@@ -33,6 +33,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log(body);
 
     // Validation avec Yup
     try {

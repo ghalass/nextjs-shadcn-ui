@@ -10,7 +10,7 @@ export type userLoginDto = {
 };
 
 // lib/types.ts
-export interface User {
+export type User = {
   id: string;
   email: string;
   name: string;
@@ -18,42 +18,43 @@ export interface User {
   roles?: UserRole[];
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
-export interface Role {
+export type Role = {
   id: string;
   name: string;
   description?: string;
+  permissions?: RolePermission[];
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
-export interface UserRole {
+export type UserRole = {
   id: string;
   userId: string;
   roleId: string;
   role?: Role;
   createdAt: Date;
-}
+};
 
-export interface userCreateDto {
+export type userCreateDto = {
   email: string;
   name: string;
   password: string;
   role: string[];
-}
+};
 
-export interface userUpdateDto {
+export type userUpdateDto = {
   id: string;
   email: string;
   name: string;
   password?: string;
   role: string[];
-}
+};
 
 // Ajouter ces types à votre fichier lib/types.ts existant
 
-export interface Permission {
+export type Permission = {
   id: string;
   name: string;
   resource: string;
@@ -61,34 +62,25 @@ export interface Permission {
   description?: string;
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
-export interface RolePermission {
+export type RolePermission = {
   id: string;
   roleId: string;
   permissionId: string;
   permission?: Permission;
   createdAt: Date;
-}
+};
 
-export interface Role {
-  id: string;
-  name: string;
-  description?: string;
-  permissions?: RolePermission[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface roleCreateDto {
+export type roleCreateDto = {
   name: string;
   description?: string;
   permissions: string[];
-}
+};
 
-export interface roleUpdateDto {
+export type roleUpdateDto = {
   id: string;
   name: string;
   description?: string;
   permissions: string[];
-}
+};

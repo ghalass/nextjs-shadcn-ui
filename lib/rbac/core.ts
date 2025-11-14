@@ -1,4 +1,6 @@
-import { prisma } from "../prisma";
+// lib/rbac/core.ts (version consolidée)
+
+import { prisma } from "@/lib/prisma";
 
 export async function getUserWithPermissions(userId: string) {
   return await prisma.user.findUnique({
@@ -114,4 +116,31 @@ export async function assignPermissionToRole(
       permissionId,
     },
   });
+}
+
+export async function removePermissionFromRole(
+  roleId: string,
+  permissionId: string
+) {
+  return await prisma.rolePermission.deleteMany({
+    where: {
+      roleId,
+      permissionId,
+    },
+  });
+}
+
+export async function checkMultiplePermissions(
+  userId: string,
+  permissions: { action: string; resource: string }[]
+): Promise<Record<string, boolean>> {
+  const userPermissions = await getUserPermissions(userId);
+  const result: Record<string, boolean> = {};
+
+  permissions.forEach(({ action, resource }) => {
+    const permissionString = `${action}:${resource}`;
+    result[permissionString] = userPermissions.includes(permissionString);
+  });
+
+  return result;
 }

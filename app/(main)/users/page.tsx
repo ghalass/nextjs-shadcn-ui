@@ -17,6 +17,7 @@ import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { UserModal } from "@/components/users/UserModal";
 import { DeleteUserModal } from "@/components/users/DeleteUserModal";
 import { User } from "@/lib/types";
+// import { User, UserRole } from "@/lib/types/user.types";
 
 export default function UsersPage() {
   const { usersQuery, createUser, updateUser, deleteUser } = useUsers();
