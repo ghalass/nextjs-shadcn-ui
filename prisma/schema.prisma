@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,7 +14,6 @@ model User {
   email     String     @unique
   name      String
   password  String
-  salt      String
   roles     UserRole[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt

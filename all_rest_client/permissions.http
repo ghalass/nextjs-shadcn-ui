@@ -1,0 +1,8 @@
+@baseUrl=http://localhost:3000/api
+
+### GET PERMISSIONS
+GET {{baseUrl}}/permissions
+
+### GET A SPECIFIC ROLE FOR A SPECIFIC PERMISSION
+POST {{baseUrl}}/permissions/cmhxqt1xh0001boagtu1v5896/roles/cmhxqt1y40006boagnqgsv33p
+# http://localhost:3000/api/permissions/cmhxqt1xh0001boagtu1v5896/roles/cmhxqt1y40006boagnqgsv33p

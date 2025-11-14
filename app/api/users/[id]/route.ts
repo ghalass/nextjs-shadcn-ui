@@ -1,67 +1,135 @@
+// app/api/users/[id]/route.ts
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { userUpdateSchema } from "@/lib/validations/userSchema";
 
-export async function PATCH(req: NextRequest) {
+// PATCH - Mettre à jour un utilisateur
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Get id from URL (/api/v1/users/:id)
-    const { pathname } = new URL(req.url);
-    // Ex: /api/v1/users/123
-    const pathParts = pathname.split("/");
-    const id = pathParts[pathParts.length - 1];
-    // Accept data in body for updates
-    const { email, name, password, role } = await req.json();
-    if (!id || !email || !name) {
+    const { id } = await params;
+    const body = await request.json();
+
+    // Validation avec Yup
+    try {
+      await userUpdateSchema.validate(body, { abortEarly: false });
+    } catch (validationError: any) {
       return NextResponse.json(
-        { error: "Id, Email, name sont requis" },
+        {
+          error: "Erreur de validation",
+          details: validationError.errors,
+        },
         { status: 400 }
       );
     }
-    // Vérifier si l'email est déjà utilisé par un autre utilisateur que celui en cours de modification
-    const existingUserEmail = await prisma.user.findUnique({
-      where: { email },
+
+    const { email, name, password, role } = body;
+
+    // Vérifier si l'utilisateur existe
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
     });
-    if (existingUserEmail && existingUserEmail.id !== id) {
+
+    if (!existingUser) {
       return NextResponse.json(
-        { error: "Cet email est déjà utilisé par un autre utilisateur." },
-        { status: 409 }
+        { error: "Utilisateur introuvable" },
+        { status: 404 }
       );
     }
-    let pwd = existingUserEmail?.password;
-    if (password.trim() !== "") pwd = password;
 
+    // Vérifier si l'email est déjà utilisé par un autre utilisateur
+    if (email !== existingUser.email) {
+      const emailExists = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (emailExists) {
+        return NextResponse.json(
+          { error: "Cet email est déjà utilisé" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Préparer les données de mise à jour
+    const updateData: any = {
+      email,
+      name,
+    };
+
+    // Hasher le nouveau mot de passe si fourni
+    if (password && password.trim() !== "") {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    // Supprimer les anciens rôles et ajouter les nouveaux
+    await prisma.userRole.deleteMany({
+      where: { userId: id },
+    });
+
+    // Mettre à jour l'utilisateur
     const user = await prisma.user.update({
       where: { id },
-      data: { email, name, password: pwd, role },
+      data: {
+        ...updateData,
+        roles: {
+          create: role.map((roleId: string) => ({
+            roleId,
+          })),
+        },
+      },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
-    return NextResponse.json(user, { status: 200 });
+
+    return NextResponse.json(user);
   } catch (error) {
+    console.error("Erreur PATCH /api/users/[id]:", error);
     return NextResponse.json(
-      { error: "Failed to update user" },
-      {
-        status: 500,
-      }
+      { error: "Erreur lors de la mise à jour de l'utilisateur" },
+      { status: 500 }
     );
   }
 }
 
-export async function DELETE(req: NextRequest) {
+// DELETE - Supprimer un utilisateur
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Get id from URL (/api/v1/users/:id)
-    const { pathname } = new URL(req.url);
-    const pathParts = pathname.split("/");
-    const id = pathParts[pathParts.length - 1];
-    if (!id) {
-      return NextResponse.json({ error: "Id requis" }, { status: 400 });
-    }
+    const { id } = await params;
 
-    const user = await prisma.user.delete({
+    // Vérifier si l'utilisateur existe
+    const existingUser = await prisma.user.findUnique({
       where: { id },
     });
 
-    return NextResponse.json(user, { status: 200 });
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "Utilisateur introuvable" },
+        { status: 404 }
+      );
+    }
+
+    // Supprimer l'utilisateur (les rôles seront supprimés en cascade)
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: "Utilisateur supprimé avec succès" });
   } catch (error) {
+    console.error("Erreur DELETE /api/users/[id]:", error);
     return NextResponse.json(
-      { error: "Failed to delete user" },
+      { error: "Erreur lors de la suppression de l'utilisateur" },
       { status: 500 }
     );
   }

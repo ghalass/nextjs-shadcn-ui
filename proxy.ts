@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSession } from "./lib/auth";
 
-const routePermissions: Record<string, string[]> = {
-  "/api/users": ["USER", "ADMIN", "SUPER_ADMIN"],
-  "/api/sites": ["USER", "ADMIN", "SUPER_ADMIN"],
-};
+// const routePermissions: Record<string, string[]> = {
+//   "/api/users": ["USER", "ADMIN", "SUPER_ADMIN"],
+//   "/api/sites": ["USER", "ADMIN", "SUPER_ADMIN"],
+// };
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;

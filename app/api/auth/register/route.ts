@@ -1,62 +1,97 @@
-// app/api/auth/register/route.ts
-
+// app/api/users/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-// import { signJwt } from "@/lib/jwt";
-import { getSession, hashPassword } from "@/lib/auth";
+import bcrypt from "bcryptjs";
+import { userCreateSchema } from "@/lib/validations/userSchema";
 
-export async function POST(req: Request) {
+// GET - Récupérer tous les utilisateurs
+export async function GET() {
   try {
-    const { name, email, password } = await req.json();
+    const users = await prisma.user.findMany({
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
+    return NextResponse.json(users);
+  } catch (error) {
+    console.error("Erreur GET /api/users:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la récupération des utilisateurs" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Créer un utilisateur
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+
+    // Validation avec Yup
+    try {
+      await userCreateSchema.validate(body, { abortEarly: false });
+    } catch (validationError: any) {
       return NextResponse.json(
-        { error: "Un utilisateur avec cet email existe déjà" },
+        {
+          error: "Erreur de validation",
+          details: validationError.errors,
+        },
         { status: 400 }
       );
     }
 
-    // Générer un salt et hasher le mot de passe
-    const hashed = await hashPassword(password);
+    const { email, name, password } = body;
 
+    // Vérifier si l'email existe déjà
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "Cet email est déjà utilisé" },
+        { status: 400 }
+      );
+    }
+
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { role } = body;
+    // Créer l'utilisateur avec les rôles
     const user = await prisma.user.create({
-      // data: { name, email, password: hashedPassword, salt },
-      data: { name, email, password: hashed.hash, salt: hashed.salt },
+      data: {
+        email,
+        name,
+        password: hashedPassword,
+        roles: {
+          create: role.map((roleId: string) => ({
+            roleId,
+          })),
+        },
+      },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
 
-    // // Génération du token JWT
-    // const token = signJwt({
-    //   userId: user.id,
-    //   email: user.email,
-    //   role: user.role,
-    // });
-
-    const response = NextResponse.json({
-      message: "Utilisateur créé avec succès",
-      user: { id: user.id, email: user.email },
-    });
-
-    const session = await getSession();
-    session.userId = user.id;
-    session.email = user.email;
-    session.role = user.role;
-    session.isLoggedIn = true;
-    await session.save();
-
-    // response.cookies.set("token", token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production",
-    //   sameSite: "strict",
-    //   path: "/",
-    //   maxAge: 7 * 24 * 60 * 60,
-    // });
-
-    return response;
+    return NextResponse.json(user, { status: 201 });
   } catch (error) {
-    console.error("Erreur lors de l'inscription:", error);
+    console.error("Erreur POST /api/users:", error);
     return NextResponse.json(
-      { error: "Erreur interne du serveur" },
+      { error: "Erreur lors de la création de l'utilisateur" },
       { status: 500 }
     );
   }

@@ -86,6 +86,7 @@ export function AppSidebar() {
 
               {/* Section Collapsible */}
               <Collapsible className="group/collapsible" defaultOpen={false}>
+                {/*  */}
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
@@ -110,10 +111,25 @@ export function AppSidebar() {
                             Utilisateurs
                           </Link>
                         </SidebarMenuButton>
+                        <SidebarMenuButton asChild>
+                          <Link href="/roles">
+                            <Users />
+                            Rôles
+                          </Link>
+                        </SidebarMenuButton>
+                        {/*  */}
+                        <SidebarMenuButton asChild>
+                          <Link href="/permissions">
+                            <Users />
+                            Permissions
+                          </Link>
+                        </SidebarMenuButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>
+
+                {/*  */}
               </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>

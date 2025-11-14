@@ -1,9 +1,7 @@
 // app/api/auth/login/route.ts
 
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-// import { signJwt } from "@/lib/jwt";
 import { getSession, verifyPassword } from "@/lib/auth";
 
 export async function POST(req: Request) {
@@ -27,13 +25,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔹 Vérifier le mot de passe avec le salt
-    // const passwordMatches = await bcrypt.compare(
-    //   password + user.salt,
-    //   user.password
-    // );
-
-    const isValid = await verifyPassword(password, user.salt, user.password);
+    const isValid = await verifyPassword(password, user.password);
 
     if (!isValid) {
       return NextResponse.json(
@@ -42,14 +34,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔹 Génération du JWT
-    // const token = signJwt({
-    //   userId: user.id,
-    //   email: user.email,
-    //   role: user.role,
-    // });
-
-    const response = NextResponse.json({ user, message: "Logged in" });
+    const response = NextResponse.json({
+      user: {
+        userId: user.id,
+        email: user.email,
+        roles: user.roles.map((r) => r.role.name),
+        isLoggedIn: true,
+      },
+      message: "Logged in",
+    });
 
     const session = await getSession();
     session.userId = user.id;
@@ -58,14 +51,6 @@ export async function POST(req: Request) {
     session.roles = user.roles.map((r) => r.role.name);
     session.isLoggedIn = true;
     await session.save();
-
-    // response.cookies.set("token", token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production",
-    //   sameSite: "strict",
-    //   path: "/",
-    //   maxAge: 7 * 24 * 60 * 60, // 7 jours
-    // });
 
     return response;
   } catch (error) {

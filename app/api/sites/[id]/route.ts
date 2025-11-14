@@ -1,73 +1,145 @@
 // app/api/sites/[id]/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
 
-const DELAY = 2000;
-
-// PATCH /api/sites/:id
-export async function PATCH(req: Request, context: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // ✅ Simuler un délai de 2 secondes
-    await new Promise((resolve) => setTimeout(resolve, DELAY));
-
-    // Next.js 16 App Router : params doit être "awaited"
-    const { id } = await context.params; // <--- important
-    const body = await req.json();
+    const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+      return NextResponse.json(
+        { message: "ID du site requis" },
+        { status: 400 }
+      );
     }
 
-    const exists = await prisma.site.findFirst({
-      where: { id: { not: { equals: id } }, name: body.name },
-    });
-
-    if (exists) {
-      return NextResponse.json({ error: "Site déjà utilisé" }, { status: 400 });
-    }
-
-    const updatedSite = await prisma.site.update({
+    const site = await prisma.site.findUnique({
       where: { id },
-      data: {
-        name: body.name,
-        active: body.active,
-      },
     });
 
-    return NextResponse.json(updatedSite);
+    if (!site) {
+      return NextResponse.json({ message: "Site non trouvé" }, { status: 404 });
+    }
+
+    return NextResponse.json(site);
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching site:", error);
     return NextResponse.json(
-      { error: "Impossible de mettre à jour le site" },
+      { message: "Erreur lors de la récupération du site" },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/sites/:id
-export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ✅ Simuler un délai de 2 secondes
-    await new Promise((resolve) => setTimeout(resolve, DELAY));
-
-    const { id } = await context.params;
+    const { id } = await params;
 
     if (!id) {
-      return NextResponse.json({ error: "ID manquant" }, { status: 400 });
+      return NextResponse.json(
+        { message: "ID du site requis" },
+        { status: 400 }
+      );
     }
 
-    const deletedSite = await prisma.site.delete({
+    const body = await request.json();
+    const { name, active } = body;
+
+    // Validation des données
+    if (name && typeof name !== "string") {
+      return NextResponse.json(
+        { message: "Le nom doit être une chaîne de caractères" },
+        { status: 400 }
+      );
+    }
+
+    const existingSite = await prisma.site.findUnique({
       where: { id },
     });
 
-    return NextResponse.json(deletedSite);
+    if (!existingSite) {
+      return NextResponse.json({ message: "Site non trouvé" }, { status: 404 });
+    }
+
+    const site = await prisma.site.update({
+      where: { id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(active !== undefined && { active }),
+      },
+    });
+
+    return NextResponse.json(site);
   } catch (error) {
-    console.error(error);
+    console.error("Error updating site:", error);
+
+    if (error instanceof Error) {
+      if (error.message.includes("Unique constraint")) {
+        return NextResponse.json(
+          { message: "Un site avec ce nom existe déjà" },
+          { status: 400 }
+        );
+      }
+      if (error.message.includes("Record to update not found")) {
+        return NextResponse.json(
+          { message: "Site non trouvé" },
+          { status: 404 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Impossible de supprimer le site" },
+      { message: "Erreur lors de la modification du site" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "ID du site requis" },
+        { status: 400 }
+      );
+    }
+
+    const existingSite = await prisma.site.findUnique({
+      where: { id },
+    });
+
+    if (!existingSite) {
+      return NextResponse.json({ message: "Site non trouvé" }, { status: 404 });
+    }
+
+    await prisma.site.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: "Site supprimé avec succès" });
+  } catch (error) {
+    console.error("Error deleting site:", error);
+
+    if (
+      error instanceof Error &&
+      error.message.includes("Record to delete does not exist")
+    ) {
+      return NextResponse.json({ message: "Site non trouvé" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { message: "Erreur lors de la suppression du site" },
       { status: 500 }
     );
   }

@@ -1,3 +1,4 @@
+// hooks/useUsers.ts
 "use client";
 
 import { API } from "@/lib/constantes";
@@ -9,7 +10,7 @@ import toast from "react-hot-toast";
 // ✅ HOOK PRINCIPAL
 // =======================================================
 export function useUsers() {
-  const queryClient = useQueryClient(); // ok ici
+  const queryClient = useQueryClient();
 
   // 🔹 FETCH USERS
   const usersQuery = useQuery<User[]>({
@@ -23,7 +24,7 @@ export function useUsers() {
       // ✅ Retourner le tableau directement
       return data ?? [];
     },
-    enabled: true, // pour fetch automatiquement
+    enabled: true,
   });
 
   // 🔹 CREATE USER
@@ -36,15 +37,20 @@ export function useUsers() {
       });
 
       const data = await res.json();
-      if (!res.ok) toast.error(data.error || "Erreur lors de la création");
-      else {
-        toast.success("Utilisateur ajouté avec succès !");
-        queryClient.invalidateQueries({ queryKey: ["users"] });
+
+      if (!res.ok) {
+        // Créer un objet d'erreur structuré pour le frontend
+        const error: any = new Error(
+          data.error || "Erreur lors de la création"
+        );
+        error.response = { data };
+        error.status = res.status;
+        throw error;
       }
+
+      toast.success("Utilisateur ajouté avec succès !");
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       return data;
-    },
-    onError: (error) => {
-      toast.error(error.message);
     },
   });
 
@@ -52,7 +58,13 @@ export function useUsers() {
   const updateUser = useMutation<
     User,
     Error,
-    { id: string; email: string; name: string; password: string; role: string }
+    {
+      id: string;
+      email: string;
+      name: string;
+      password: string;
+      role: string[];
+    }
   >({
     mutationFn: async ({ id, email, name, password, role }) => {
       const res = await fetch(`${API}/users/${id}`, {
@@ -62,15 +74,26 @@ export function useUsers() {
       });
 
       const data = await res.json();
-      if (!res.ok) toast.error(data.error || "Erreur lors de la mise à jour");
-      else {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-        toast.success("Utilisateur modifié !");
+
+      if (!res.ok) {
+        // Créer un objet d'erreur structuré pour le frontend
+        const error: any = new Error(
+          data.error || "Erreur lors de la mise à jour"
+        );
+        error.response = { data };
+        error.status = res.status;
+        throw error;
       }
+
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Utilisateur modifié !");
       return data;
     },
-    onError: (error) => {
-      toast.error(error.message);
+    onError: (error: any) => {
+      // Ne pas afficher de toast si c'est une erreur de validation
+      if (error.status !== 400 && error.status !== 409) {
+        toast.error(error.message);
+      }
     },
   });
 
@@ -79,11 +102,13 @@ export function useUsers() {
     mutationFn: async ({ id }) => {
       const res = await fetch(`${API}/users/${id}`, { method: "DELETE" });
       const data = await res.json();
-      if (!res.ok) toast.error(data.error || "Erreur lors de la suppression");
-      else {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-        toast.success("Utilisateur supprimé !");
+
+      if (!res.ok) {
+        throw new Error(data.error || "Erreur lors de la suppression");
       }
+
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("Utilisateur supprimé !");
       return data;
     },
     onError: (error) => {

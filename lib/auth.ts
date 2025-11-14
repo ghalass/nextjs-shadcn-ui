@@ -11,12 +11,8 @@ export async function hashPassword(password: string) {
   return { salt, hash };
 }
 
-export async function verifyPassword(
-  password: string,
-  salt: string,
-  hashedPassword: string
-) {
-  const passwordMatches = await bcrypt.compare(password + salt, hashedPassword);
+export async function verifyPassword(password: string, hashedPassword: string) {
+  const passwordMatches = await bcrypt.compare(password, hashedPassword);
   return passwordMatches;
 }
 

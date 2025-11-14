@@ -1,0 +1,5 @@
+@baseUrl=http://localhost:3000/api
+
+### GET USER ROLES
+GET {{baseUrl}}/user-roles
+

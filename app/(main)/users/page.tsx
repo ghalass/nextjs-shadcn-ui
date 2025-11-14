@@ -1,263 +1,154 @@
 "use client";
 
+import { useState } from "react";
 import { useUsers } from "@/hooks/useUsers";
-import { LucidePlus, LucideTrash2, Pencil } from "lucide-react";
+import { useRoles } from "@/hooks/useRoles";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { UserModal } from "@/components/users/UserModal";
+import { DeleteUserModal } from "@/components/users/DeleteUserModal";
 import { User } from "@/lib/types";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import Yup from "@/lib/yupFr";
-import React from "react";
-import { Operation } from "@/lib/enums";
-import Spinner from "@/components/Spinner";
 
 export default function UsersPage() {
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { usersQuery, createUser, updateUser, deleteUser } = useUsers();
-  const [op, setOp] = React.useState<Operation>(Operation.READ);
-  const [selectedUser, setSelectedUser] = React.useState<Partial<User>>({});
+  const { rolesQuery } = useRoles();
 
-  // Validation dynamique selon l'opération
-  const getValidationSchema = (operation: Operation) => {
-    return Yup.object({
-      name: Yup.string().required().label("Nom"),
-      email: Yup.string().email().required().label("Addresse Email"),
-      password:
-        operation === Operation.CREATE
-          ? Yup.string().required().label("Mot de passe")
-          : Yup.string().label("Mot de passe"), // Optionnel pour UPDATE/DELETE
-      role: Yup.string().required().label("Rôle"),
-    });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleCreate = () => {
+    setSelectedUser(null);
+    setIsModalOpen(true);
   };
 
-  const initialValues: Partial<User> = {
-    email: "",
-    password: "",
-    name: "",
-    role: "",
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
   };
 
-  const formValues =
-    op === Operation.UPDATE || op === Operation.DELETE
-      ? {
-          email: selectedUser.email ?? "",
-          name: selectedUser.name ?? "",
-          password: selectedUser.password ?? "",
-          role: selectedUser.role ?? "",
-        }
-      : initialValues;
-
-  // À l'intérieur de UsersPage, avant le return
-  const handleFormSubmit = async (
-    values: Partial<User>,
-    resetForm: () => void
-  ) => {
-    try {
-      setIsSubmitting(true); // ← début de soumission
-
-      switch (op) {
-        case Operation.CREATE:
-          await createUser.mutateAsync({
-            name: values.name!,
-            email: values.email!,
-            password: values.password!,
-            role: values.role!,
-          });
-          break;
-
-        case Operation.UPDATE:
-          if (!selectedUser.id) return;
-          await updateUser.mutateAsync({
-            id: selectedUser.id,
-            name: values.name!,
-            email: values.email!,
-            password: values.password ?? "",
-            role: values.role!,
-          });
-          break;
-
-        case Operation.DELETE:
-          if (!selectedUser.id) return;
-          await deleteUser.mutateAsync({ id: selectedUser.id });
-          break;
-      }
-
-      // Réinitialise le formulaire et l'état
-      if (op === Operation.DELETE) {
-        resetForm();
-        setOp(Operation.READ);
-        setSelectedUser({});
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false); // ← fin de soumission
-    }
+  const handleDelete = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
   };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedUser(null);
+  };
+
+  if (usersQuery.isLoading || rolesQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      <h1 className="mb-2 font-semibold text-lg">Liste des utilisateurs</h1>
-      <div className="flex items-start gap-4">
-        {/* Formulaire toujours affiché */}
-        <div className="border border-slate-200 p-3 rounded-md w-80">
-          <Formik
-            initialValues={formValues}
-            validationSchema={getValidationSchema(op)}
-            enableReinitialize
-            onSubmit={(values, { resetForm }) =>
-              handleFormSubmit(values, resetForm)
-            }
-          >
-            {() => (
-              <Form className="flex flex-col gap-2" autoComplete="off">
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => {
-                    setOp(Operation.CREATE);
-                    setSelectedUser({});
-                  }}
-                  className="py-1 px-2 border rounded-sm border-slate-300 mb-2 hover:cursor-pointer"
-                >
-                  Nouveau
-                </button>
-
-                <div>
-                  <Field
-                    type="text"
-                    name="name"
-                    placeholder="Nom"
-                    className="border border-slate-400 py-1 px-2 rounded-sm w-full"
-                    disabled={isSubmitting}
-                  />
-                  <ErrorMessage
-                    name="name"
-                    component="div"
-                    className="text-red-300 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <Field
-                    type="email"
-                    name="email"
-                    placeholder="Email"
-                    className="border border-slate-400 py-1 px-2 rounded-sm w-full"
-                    disabled={isSubmitting}
-                  />
-                  <ErrorMessage
-                    name="email"
-                    component="div"
-                    className="text-red-300 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <Field
-                    type="password"
-                    name="password"
-                    placeholder="Mot de passe"
-                    className="border border-slate-400 py-1 px-2 rounded-sm w-full"
-                    disabled={isSubmitting}
-                  />
-                  <ErrorMessage
-                    name="password"
-                    component="div"
-                    className="text-red-300 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <Field
-                    as="select"
-                    name="role"
-                    className="border border-slate-400 py-1 px-2 rounded-sm w-full"
-                    disabled={isSubmitting}
-                  >
-                    <option value="">Rôle</option>
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                    <option value="USER">USER</option>
-                  </Field>
-                  <ErrorMessage
-                    name="role"
-                    component="div"
-                    className="text-red-300 text-sm"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className={`py-1 px-3 border rounded-sm flex items-center justify-center gap-1 hover:cursor-pointer
-                    ${
-                      op === Operation.CREATE
-                        ? "border-blue-400 text-blue-400"
-                        : op === Operation.UPDATE
-                        ? "border-green-400 text-green-400"
-                        : op === Operation.DELETE
-                        ? "border-red-300 text-red-300"
-                        : "hidden"
-                    }`}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Spinner /> Processing...
-                    </>
-                  ) : (
-                    <>
-                      {op === Operation.CREATE && <LucidePlus size={16} />}
-                      {op === Operation.UPDATE && <Pencil size={16} />}
-                      {op === Operation.DELETE && <LucideTrash2 size={16} />}
-                      {op === Operation.CREATE && "Ajouter"}
-                      {op === Operation.UPDATE && "Modifier"}
-                      {op === Operation.DELETE && "Supprimer"}
-                    </>
-                  )}
-                </button>
-              </Form>
-            )}
-          </Formik>
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des utilisateurs</h1>
+          <p className="text-muted-foreground mt-1">
+            Gérez les utilisateurs et leurs rôles
+          </p>
         </div>
-
-        {/* Liste des utilisateurs */}
-        <div className="border border-slate-200 p-3 rounded-md w-full">
-          {usersQuery.isLoading ? (
-            <div>Chargement...</div>
-          ) : (
-            <ul>
-              {usersQuery.data?.map((user) => (
-                <li key={user.id} className="flex items-center gap-2 mb-1">
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => {
-                      setOp(Operation.DELETE);
-                      setSelectedUser(user);
-                    }}
-                    className="border rounded-full p-1 border-slate-300  hover:bg-slate-200 hover:cursor-pointer"
-                  >
-                    <LucideTrash2 size={18} className="text-red-300" />
-                  </button>
-
-                  <button
-                    disabled={isSubmitting}
-                    onClick={() => {
-                      setOp(Operation.UPDATE);
-                      setSelectedUser(user);
-                    }}
-                    className="border rounded-full p-1 border-slate-300  hover:bg-slate-200 hover:cursor-pointer"
-                  >
-                    <Pencil size={18} className="text-green-300" />
-                  </button>
-
-                  <span>
-                    {user.name} {user.email} ({user.role})
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <Button onClick={handleCreate}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nouvel utilisateur
+        </Button>
       </div>
+
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nom</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Rôles</TableHead>
+              <TableHead>Date de création</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {usersQuery.data?.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-10">
+                  Aucun utilisateur trouvé
+                </TableCell>
+              </TableRow>
+            ) : (
+              usersQuery.data?.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 flex-wrap">
+                      {user.roles?.map((userRole) => (
+                        <Badge key={userRole.id} variant="secondary">
+                          {userRole.role?.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(user.createdAt).toLocaleDateString("fr-FR")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(user)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(user)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <UserModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        user={selectedUser}
+        roles={rolesQuery.data || []}
+        createUser={createUser}
+        updateUser={updateUser}
+      />
+
+      <DeleteUserModal
+        open={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        user={selectedUser}
+        deleteUser={deleteUser}
+      />
     </div>
   );
 }

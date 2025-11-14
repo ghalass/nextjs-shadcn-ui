@@ -1,68 +1,48 @@
-import { getSession } from "@/lib/auth";
+// app/api/sites/route.ts
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hasPermission } from "@/lib/rbac";
-import { NextResponse } from "next/server";
 
-const DELAY = 2000;
-
-// ✅ GET /api/sites — récupérer tous les sites actifs
 export async function GET() {
   try {
-    const sites = await prisma.site.findMany();
+    const sites = await prisma.site.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+
     return NextResponse.json(sites);
   } catch (error) {
+    console.error("Error fetching sites:", error);
     return NextResponse.json(
-      { error: "Erreur interne serveur" },
+      { message: "Erreur lors de la récupération des sites" },
       { status: 500 }
     );
   }
 }
 
-// ✅ POST /api/sites — créer un nouveau site
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // ✅ Simuler un délai de 2 secondes
-    await new Promise((resolve) => setTimeout(resolve, DELAY));
-
-    const session = await getSession();
-    const userId = session?.userId;
-    if (!session?.isLoggedIn || !userId) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-    }
-
-    const canCreate = await hasPermission(userId, "create", "sites");
-    if (!canCreate) {
-      return NextResponse.json({ error: "Interdit" }, { status: 403 });
-    }
-
-    const body = await req.json();
-
+    const body = await request.json();
     const { name, active = true } = body;
 
-    if (!name || typeof name !== "string") {
-      return NextResponse.json(
-        { error: "Le champ 'name' est requis et doit être une chaîne" },
-        { status: 400 }
-      );
-    }
-
-    const exists = await prisma.site.findFirst({
-      where: { name: name },
-    });
-
-    if (exists) {
-      return NextResponse.json({ error: "Site déjà utilisé" }, { status: 400 });
-    }
-
     const site = await prisma.site.create({
-      data: { name, active },
+      data: {
+        name,
+        active,
+      },
     });
 
     return NextResponse.json(site, { status: 201 });
   } catch (error) {
-    console.error("Erreur création site:", error);
+    console.error("Error creating site:", error);
+
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
+      return NextResponse.json(
+        { message: "Un site avec ce nom existe déjà" },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "Impossible de créer le site" },
+      { message: "Erreur lors de la création du site" },
       { status: 500 }
     );
   }
