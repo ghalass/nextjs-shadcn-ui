@@ -21,6 +21,37 @@ export default async function Home() {
         <CanAccess action="update" resource="sites">
           <Button variant={"default"}>update un site</Button>
         </CanAccess>
+
+        {/* Exemple d'utilisation */}
+        <CanAccess
+          action="read"
+          resource="sites"
+          fallback={<p>Accès refusé</p>}
+        >
+          <div>
+            <h2>Gestion des articles</h2>
+            <p>Vous pouvez lire les articles</p>
+          </div>
+        </CanAccess>
+
+        <CanAccess
+          action="create"
+          resource="sites"
+          fallback={<p>Pas de droit de création</p>}
+        >
+          <button>Créer un article</button>
+        </CanAccess>
+
+        <CanAccess
+          action="manage"
+          resource="users"
+          fallback={<p>Admin uniquement</p>}
+        >
+          <div>
+            <h2>Gestion des utilisateurs</h2>
+            <p>Section réservée aux administrateurs</p>
+          </div>
+        </CanAccess>
       </div>
     </main>
   );

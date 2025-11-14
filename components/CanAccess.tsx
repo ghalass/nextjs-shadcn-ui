@@ -1,7 +1,7 @@
 // components/CanAccess.tsx
 "use client";
 
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissionCheck } from "@/hooks/usePermissions";
 
 interface CanAccessProps {
   action: string;
@@ -16,9 +16,9 @@ export function CanAccess({
   children,
   fallback = null,
 }: CanAccessProps) {
-  const { hasPermission, loading } = usePermissions();
+  const { hasPermission, isLoading } = usePermissionCheck();
 
-  if (loading) return null;
+  if (isLoading) return null;
 
   if (!hasPermission(action, resource)) {
     return <>{fallback}</>;

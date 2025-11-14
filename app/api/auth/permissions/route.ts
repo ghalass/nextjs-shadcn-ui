@@ -1,7 +1,7 @@
 // app/api/auth/permissions/route.ts
 import { NextResponse } from "next/server";
 // import { getCurrentUserId } from "@/lib/auth";
-import { getUserPermissions } from "@/lib/rbac";
+import { getUserPermissions } from "@/lib/rbac/rbac";
 import { getSession } from "@/lib/auth";
 
 export async function GET() {

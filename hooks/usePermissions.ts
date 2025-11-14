@@ -40,6 +40,34 @@ export const usePermissions = () => {
   });
 };
 
+// Hook pour les permissions utilisateur (RBAC)
+export const useUserPermissions = () => {
+  return useQuery({
+    queryKey: ["user-permissions"],
+    queryFn: async (): Promise<string[]> => {
+      const response = await fetch(`${API}/auth/permissions`);
+      if (!response.ok) {
+        throw new Error(
+          "Erreur lors du chargement des permissions utilisateur"
+        );
+      }
+      const data = await response.json();
+      return data.permissions || [];
+    },
+  });
+};
+
+// Fonction utilitaire pour vérifier les permissions
+export const usePermissionCheck = () => {
+  const { data: permissions = [], isLoading } = useUserPermissions();
+
+  const hasPermission = (action: string, resource: string) => {
+    return permissions.includes(`${action}:${resource}`);
+  };
+
+  return { hasPermission, permissions, isLoading };
+};
+
 // GET permission by ID
 export const usePermission = (id: string) => {
   return useQuery({
@@ -96,7 +124,7 @@ export const useUpdatePermission = () => {
       id: string;
       data: UpdatePermissionData;
     }): Promise<Permission> => {
-      console.log("Updating permission with ID:", id); // Debug log
+      console.log("Updating permission with ID:", id);
 
       const response = await fetch(`${API}/permissions/${id}`, {
         method: "PUT",
@@ -123,6 +151,7 @@ export const useUpdatePermission = () => {
     },
   });
 };
+
 // DELETE permission
 export const useDeletePermission = () => {
   const queryClient = useQueryClient();

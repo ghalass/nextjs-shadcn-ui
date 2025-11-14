@@ -19,8 +19,6 @@ export function useUsers() {
       const res = await fetch(`${API}/users`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur lors du fetch");
-      console.log(data);
-
       // ✅ Retourner le tableau directement
       return data ?? [];
     },

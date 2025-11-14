@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader2, Edit, Trash2, Plus } from "lucide-react";
+import { CanAccess } from "../CanAccess";
 
 interface SitesListProps {
   sites: Site[];
@@ -43,10 +44,13 @@ export function SitesList({
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Liste des sites</h2>
-        <Button onClick={onCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouveau site
-        </Button>
+
+        <CanAccess action="create" resource="sites">
+          <Button onClick={onCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nouveau site
+          </Button>
+        </CanAccess>
       </div>
 
       {sites.length === 0 ? (
@@ -82,26 +86,31 @@ export function SitesList({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onEdit(site)}
-                        disabled={isDeleting === site.id}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => onDelete(site)}
-                        disabled={isDeleting === site.id}
-                      >
-                        {isDeleting === site.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <CanAccess action="update" resource="sites">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEdit(site)}
+                          disabled={isDeleting === site.id}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </CanAccess>
+
+                      <CanAccess action="delete" resource="sites">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => onDelete(site)}
+                          disabled={isDeleting === site.id}
+                        >
+                          {isDeleting === site.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </CanAccess>
                     </div>
                   </TableCell>
                 </TableRow>

@@ -1,9 +1,14 @@
 // app/api/sites/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { protectReadRoute } from "@/lib/rbac/middleware";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Vérifier la permission de lecture des utilisateurs
+    const protectionError = await protectReadRoute(request, "users");
+    if (protectionError) return protectionError;
+
     const sites = await prisma.site.findMany({
       orderBy: { createdAt: "desc" },
     });
