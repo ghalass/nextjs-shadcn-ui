@@ -1,39 +1,52 @@
 // app/api/users/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { userCreateSchema } from "@/lib/validations/userSchema";
-
-// GET - Récupérer tous les utilisateurs
-export async function GET() {
-  try {
-    const users = await prisma.user.findMany({
-      include: {
-        roles: {
-          include: {
-            role: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return NextResponse.json(users);
-  } catch (error) {
-    console.error("Erreur GET /api/users:", error);
-    return NextResponse.json(
-      { error: "Erreur lors de la récupération des utilisateurs" },
-      { status: 500 }
-    );
-  }
-}
+import { hashPassword } from "@/lib/auth";
 
 // POST - Créer un utilisateur
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // vérifier si le 1er utilisateur qui s'inscrit doit être admin
+    const userCount = await prisma.user.count();
+    if (userCount === 0) {
+      // un role admin doit exister dans la table des rôles
+      // si ce n'est pas le cas, il faut le créer manuellement avant de créer le 1er utilisateur
+      const adminRole = await prisma.role.findUnique({
+        where: { name: "admin" },
+      });
+
+      if (!adminRole) {
+        const admin = await prisma.role.create({
+          data: {
+            name: "admin",
+            description: "Administrateur avec tous les droits",
+          },
+        });
+        body.role = [admin.id];
+      } else {
+        body.role = [adminRole.id];
+      }
+    }
+
+    // sinon, attribuer le rôle "user" par défaut
+    const userRole = await prisma.role.findUnique({
+      where: { name: "user" },
+    });
+    // si le rôle "user" n'existe pas, le créer
+    if (!userRole) {
+      const role = await prisma.role.create({
+        data: {
+          name: "user",
+          description: "Utilisateur standard",
+        },
+      });
+      body.role = [role.id];
+    } else {
+      body.role = [userRole.id];
+    }
 
     // Validation avec Yup
     try {
@@ -63,11 +76,12 @@ export async function POST(request: Request) {
     }
 
     // Hasher le mot de passe
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     const { role } = body;
     // Créer l'utilisateur avec les rôles
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email,
         name,
@@ -87,7 +101,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    return NextResponse.json({ status: 201 });
   } catch (error) {
     console.error("Erreur POST /api/users:", error);
     return NextResponse.json(

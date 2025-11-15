@@ -124,6 +124,12 @@ export function AppSidebar() {
                             Permissions
                           </Link>
                         </SidebarMenuButton>
+                        <SidebarMenuButton asChild>
+                          <Link href="/resources">
+                            <Users />
+                            Resources
+                          </Link>
+                        </SidebarMenuButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>

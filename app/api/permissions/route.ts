@@ -1,4 +1,3 @@
-// app/api/permissions/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -6,6 +5,9 @@ export async function GET() {
   try {
     const permissions = await prisma.permission.findMany({
       orderBy: { createdAt: "desc" },
+      include: {
+        resource: true, // Inclure les données de la ressource
+      },
     });
 
     return NextResponse.json(permissions);
@@ -21,24 +23,26 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, resource, action, description } = body;
-
-    console.log("Request body:", body);
+    const { name, resourceId, action, description } = body;
 
     // Validation des données
-    if (!name || !resource || !action) {
+    if (!name || !resourceId || !action) {
       return NextResponse.json(
         { message: "Le nom, la ressource et l'action sont requis" },
         { status: 400 }
       );
     }
 
+    // ✅ CORRECTION : Utiliser resourceId directement
     const permission = await prisma.permission.create({
       data: {
         name,
-        resource,
+        resourceId,
         action,
         description,
+      },
+      include: {
+        resource: true, // Inclure la ressource dans la réponse
       },
     });
 
@@ -64,6 +68,14 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
+      }
+
+      // ✅ Gestion spécifique de l'erreur de clé étrangère
+      if (error.message.includes("Foreign key constraint")) {
+        return NextResponse.json(
+          { message: "La ressource spécifiée n'existe pas" },
+          { status: 400 }
+        );
       }
     }
 

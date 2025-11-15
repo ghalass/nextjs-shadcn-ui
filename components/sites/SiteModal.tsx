@@ -9,12 +9,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SiteForm } from "./SiteForm";
-import { SiteFormData } from "@/lib/validations/siteSchema";
+import { type Site } from "@/hooks/useSites";
+import { type SiteFormData } from "@/lib/validations/siteSchema";
 
 interface SiteModalProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
-  initialData?: SiteFormData & { id?: string };
+  onClose: () => void;
+  site?: Site; // ✅ Doit être optionnel
   onSubmit: (data: SiteFormData) => Promise<void>;
   isSubmitting: boolean;
   error?: string;
@@ -24,34 +25,27 @@ interface SiteModalProps {
 
 export function SiteModal({
   open,
-  onOpenChange,
-  initialData,
+  onClose, // ✅ Utilisez onClose
+  site,
   onSubmit,
   isSubmitting,
   error,
   title,
   description,
 }: SiteModalProps) {
-  const handleSubmit = async (data: SiteFormData) => {
-    await onSubmit(data);
-    onOpenChange(false);
-  };
-
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog open={open} onOpenChange={onClose}>
+      {" "}
+      {/* ✅ Passez onClose à onOpenChange */}
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <SiteForm
-          initialData={initialData}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
+          initialData={site}
+          onSubmit={onSubmit}
+          onCancel={onClose} // ✅ Passez onClose comme onCancel
           isSubmitting={isSubmitting}
           error={error}
         />

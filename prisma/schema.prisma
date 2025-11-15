@@ -34,17 +34,19 @@ model Role {
 }
 
 model Permission {
-  id          String           @id @default(cuid())
-  name        String           @unique
-  resource    String // posts, users, analytics
-  action      String // read, create, update, delete
+  id          String   @id @default(cuid())
+  name        String   @unique
   description String?
-  roles       RolePermission[]
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  action      String
+  resourceId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@unique([resource, action])
-  @@map("permission")
+  // Relations
+  resource        Resource         @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
 }
 
 model UserRole {
@@ -79,4 +81,17 @@ model Site {
   updatedAt DateTime @updatedAt
 
   @@map("site")
+}
+
+model Resource {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  label     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  permissions Permission[]
+
+  @@map("resources")
 }

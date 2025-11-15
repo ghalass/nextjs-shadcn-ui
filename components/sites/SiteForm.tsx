@@ -6,14 +6,15 @@ import { SiteFormData, siteSchema } from "@/lib/validations/siteSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { type Site } from "@/hooks/useSites";
 
 interface SiteFormProps {
-  initialData?: SiteFormData & { id?: string };
+  initialData?: Site;
   onSubmit: (data: SiteFormData) => Promise<void>;
-  onCancel: () => void;
+  onCancel: () => void; // ✅ Changez le nom pour plus de clarté
   isSubmitting: boolean;
   error?: string;
 }
@@ -21,7 +22,7 @@ interface SiteFormProps {
 export function SiteForm({
   initialData,
   onSubmit,
-  onCancel,
+  onCancel, // ✅ Utilisez onCancel
   isSubmitting,
   error,
 }: SiteFormProps) {
@@ -41,10 +42,16 @@ export function SiteForm({
         // Les erreurs sont gérées par le parent
       }
     },
+    enableReinitialize: true,
   });
 
+  // ✅ CORRECTION : Utilisez onCancel directement
+  const handleCancel = () => {
+    onCancel(); // ✅ Appelez onCancel directement
+  };
+
   return (
-    <form onSubmit={formik.handleSubmit} className="space-y-6">
+    <form onSubmit={formik.handleSubmit} className="space-y-4">
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -68,6 +75,7 @@ export function SiteForm({
                 ? "border-destructive"
                 : ""
             }
+            placeholder="ex: Site principal"
           />
           {formik.touched.name && formik.errors.name && (
             <p className="text-sm text-destructive mt-1">
@@ -88,7 +96,9 @@ export function SiteForm({
           <Label htmlFor="active">Site actif</Label>
         </div>
         {formik.touched.active && formik.errors.active && (
-          <p className="text-sm text-destructive">{formik.errors.active}</p>
+          <p className="text-sm text-destructive mt-1">
+            {formik.errors.active}
+          </p>
         )}
       </div>
 
@@ -96,7 +106,7 @@ export function SiteForm({
         <Button
           type="button"
           variant="outline"
-          onClick={onCancel}
+          onClick={handleCancel} // ✅ Utilisez handleCancel
           disabled={isSubmitting}
         >
           Annuler

@@ -79,12 +79,6 @@ export default function RolesPage() {
                   <div className="text-center space-y-4">
                     <Shield className="h-12 w-12 text-muted-foreground mx-auto" />
                     <p className="text-muted-foreground">Aucun rôle trouvé</p>
-                    <Button asChild>
-                      <Link href="/roles/create">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Créer le premier rôle
-                      </Link>
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

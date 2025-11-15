@@ -1,8 +1,48 @@
-// lib/rbac/core.ts (version consolidée)
-
+// lib/rbac/core.ts (version simplifiée et fonctionnelle)
 import { prisma } from "@/lib/prisma";
 
-export async function getUserWithPermissions(userId: string) {
+// Types pour les permissions
+export interface PermissionCheck {
+  action: string;
+  resource: string;
+}
+
+export interface PermissionResult {
+  [permissionString: string]: boolean;
+}
+
+export interface UserWithPermissions {
+  id: string;
+  email: string;
+  name: string | null;
+  roles: Array<{
+    role: {
+      id: string;
+      name: string;
+      description: string | null;
+      permissions: Array<{
+        permission: {
+          id: string;
+          name: string;
+          description: string | null;
+          action: string;
+          resourceId: string;
+          resource: {
+            id: string;
+            name: string;
+            label: string;
+          };
+          createdAt: Date;
+          updatedAt: Date;
+        };
+      }>;
+    };
+  }>;
+}
+
+export async function getUserWithPermissions(
+  userId: string
+): Promise<UserWithPermissions | null> {
   return await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -12,7 +52,11 @@ export async function getUserWithPermissions(userId: string) {
             include: {
               permissions: {
                 include: {
-                  permission: true,
+                  permission: {
+                    include: {
+                      resource: true,
+                    },
+                  },
                 },
               },
             },
@@ -24,38 +68,22 @@ export async function getUserWithPermissions(userId: string) {
 }
 
 export async function getUserPermissions(userId: string): Promise<string[]> {
-  const user = await getUserWithPermissions(userId);
-
-  if (!user) return [];
-
-  const permissions = new Set<string>();
-
-  user.roles.forEach((userRole) => {
-    userRole.role.permissions.forEach((rolePermission) => {
-      const perm = rolePermission.permission;
-      permissions.add(`${perm.action}:${perm.resource}`);
-    });
-  });
-
-  return Array.from(permissions);
-}
-
-export async function hasPermission(
-  userId: string,
-  action: string,
-  resource: string
-): Promise<boolean> {
-  const count = await prisma.user.count({
-    where: {
-      id: userId,
+  // ✅ APPROCHE SIMPLIFIÉE ET FONCTIONNELLE
+  // 1. Récupérer l'utilisateur avec ses rôles et permissions
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
       roles: {
-        some: {
+        include: {
           role: {
-            permissions: {
-              some: {
-                permission: {
-                  action,
-                  resource,
+            include: {
+              permissions: {
+                include: {
+                  permission: {
+                    include: {
+                      resource: true,
+                    },
+                  },
                 },
               },
             },
@@ -65,30 +93,64 @@ export async function hasPermission(
     },
   });
 
-  return count > 0;
+  if (!user) {
+    return [];
+  }
+
+  // 2. Extraire toutes les permissions uniques
+  const permissionsSet = new Set<string>();
+
+  user.roles.forEach((userRole) => {
+    userRole.role.permissions.forEach((rolePermission) => {
+      const permissionString = `${rolePermission.permission.action}:${rolePermission.permission.resource.name}`;
+      permissionsSet.add(permissionString);
+    });
+  });
+
+  return Array.from(permissionsSet);
+}
+
+export async function hasPermission(
+  userId: string,
+  action: string,
+  resourceName: string
+): Promise<boolean> {
+  // ✅ APPROCHE SIMPLIFIÉE : Utiliser getUserPermissions
+  const userPermissions = await getUserPermissions(userId);
+  const requiredPermission = `${action}:${resourceName}`;
+  return userPermissions.includes(requiredPermission);
 }
 
 export async function hasRole(
   userId: string,
   roleName: string
 ): Promise<boolean> {
-  const count = await prisma.user.count({
-    where: {
-      id: userId,
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
       roles: {
-        some: {
+        include: {
           role: {
-            name: roleName,
+            select: {
+              name: true,
+            },
           },
         },
       },
     },
   });
 
-  return count > 0;
+  if (!user) {
+    return false;
+  }
+
+  return user.roles.some((userRole) => userRole.role.name === roleName);
 }
 
-export async function assignRoleToUser(userId: string, roleId: string) {
+export async function assignRoleToUser(
+  userId: string,
+  roleId: string
+): Promise<{ id: string; userId: string; roleId: string; createdAt: Date }> {
   return await prisma.userRole.create({
     data: {
       userId,
@@ -97,7 +159,10 @@ export async function assignRoleToUser(userId: string, roleId: string) {
   });
 }
 
-export async function removeRoleFromUser(userId: string, roleId: string) {
+export async function removeRoleFromUser(
+  userId: string,
+  roleId: string
+): Promise<{ count: number }> {
   return await prisma.userRole.deleteMany({
     where: {
       userId,
@@ -109,7 +174,12 @@ export async function removeRoleFromUser(userId: string, roleId: string) {
 export async function assignPermissionToRole(
   roleId: string,
   permissionId: string
-) {
+): Promise<{
+  id: string;
+  roleId: string;
+  permissionId: string;
+  createdAt: Date;
+}> {
   return await prisma.rolePermission.create({
     data: {
       roleId,
@@ -121,7 +191,7 @@ export async function assignPermissionToRole(
 export async function removePermissionFromRole(
   roleId: string,
   permissionId: string
-) {
+): Promise<{ count: number }> {
   return await prisma.rolePermission.deleteMany({
     where: {
       roleId,
@@ -132,10 +202,10 @@ export async function removePermissionFromRole(
 
 export async function checkMultiplePermissions(
   userId: string,
-  permissions: { action: string; resource: string }[]
-): Promise<Record<string, boolean>> {
+  permissions: PermissionCheck[]
+): Promise<PermissionResult> {
   const userPermissions = await getUserPermissions(userId);
-  const result: Record<string, boolean> = {};
+  const result: PermissionResult = {};
 
   permissions.forEach(({ action, resource }) => {
     const permissionString = `${action}:${resource}`;
@@ -143,4 +213,52 @@ export async function checkMultiplePermissions(
   });
 
   return result;
+}
+
+// Fonction utilitaire pour vérifier plusieurs permissions avec un seul appel
+export async function hasAllPermissions(
+  userId: string,
+  permissions: PermissionCheck[]
+): Promise<boolean> {
+  const results = await checkMultiplePermissions(userId, permissions);
+  return Object.values(results).every(Boolean);
+}
+
+// Fonction utilitaire pour vérifier au moins une permission
+export async function hasAnyPermission(
+  userId: string,
+  permissions: PermissionCheck[]
+): Promise<boolean> {
+  const results = await checkMultiplePermissions(userId, permissions);
+  return Object.values(results).some(Boolean);
+}
+
+// Fonction pour obtenir les rôles d'un utilisateur
+export async function getUserRoles(userId: string): Promise<string[]> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      roles: {
+        include: {
+          role: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return user?.roles.map((userRole) => userRole.role.name) ?? [];
+}
+
+// Fonction pour vérifier si l'utilisateur est administrateur
+export async function isAdmin(userId: string): Promise<boolean> {
+  return await hasRole(userId, "admin");
+}
+
+// Fonction pour vérifier si l'utilisateur est super administrateur
+export async function isSuperAdmin(userId: string): Promise<boolean> {
+  return await hasRole(userId, "super-admin");
 }

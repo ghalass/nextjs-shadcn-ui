@@ -3,12 +3,9 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { getIronSession } from "iron-session";
-import crypto from "crypto";
 
 export async function hashPassword(password: string) {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = await bcrypt.hash(password + salt, 10);
-  return { salt, hash };
+  return await bcrypt.hash(password, 10);
 }
 
 export async function verifyPassword(password: string, hashedPassword: string) {
@@ -30,7 +27,7 @@ export const sessionOptions = {
     secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     sameSite: "lax" as const, // 'lax' | 'strict' | 'none'
-    maxAge: 7 * 24 * 60 * 60, // 7 jours en secondes
+    maxAge: process.env.SESSION_MAX_AGE || 1 * 60 * 60, // 1 heure en secondes
   },
 };
 

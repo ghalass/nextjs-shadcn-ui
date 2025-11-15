@@ -10,51 +10,28 @@ export interface Site {
   updatedAt: string;
 }
 
-export interface CreateSiteData {
+export interface SiteFormData {
   name: string;
   active?: boolean;
 }
 
-export interface UpdateSiteData {
-  name?: string;
-  active?: boolean;
-}
-
-// GET all sites
 export const useSites = () => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const sitesQuery = useQuery<Site[]>({
     queryKey: ["sites"],
     queryFn: async (): Promise<Site[]> => {
       const response = await fetch(`${API}/sites`);
+      const res = await response.json();
       if (!response.ok) {
-        throw new Error("Erreur lors du chargement des sites");
+        throw new Error(res.message || "Erreur lors du chargement des sites");
       }
-      return response.json();
+      return res;
     },
   });
-};
 
-// GET site by ID
-export const useSite = (id: string) => {
-  return useQuery({
-    queryKey: ["sites", id],
-    queryFn: async (): Promise<Site> => {
-      const response = await fetch(`${API}/sites/${id}`);
-      if (!response.ok) {
-        throw new Error("Erreur lors du chargement du site");
-      }
-      return response.json();
-    },
-    enabled: !!id,
-  });
-};
-
-// CREATE site
-export const useCreateSite = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateSiteData): Promise<Site> => {
+  const createSite = useMutation<Site, Error, SiteFormData>({
+    mutationFn: async (data: SiteFormData): Promise<Site> => {
       const response = await fetch(`${API}/sites`, {
         method: "POST",
         headers: {
@@ -62,32 +39,23 @@ export const useCreateSite = () => {
         },
         body: JSON.stringify(data),
       });
-
+      const res = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Erreur lors de la création du site");
+        throw new Error(res.message || "Erreur lors de la création du site");
       }
-
-      return response.json();
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     },
   });
-};
 
-// UPDATE site
-export const useUpdateSite = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateSiteData;
-    }): Promise<Site> => {
+  const updateSite = useMutation<
+    Site,
+    Error,
+    { id: string; data: SiteFormData }
+  >({
+    mutationFn: async ({ id, data }): Promise<Site> => {
       const response = await fetch(`${API}/sites/${id}`, {
         method: "PUT",
         headers: {
@@ -96,41 +64,40 @@ export const useUpdateSite = () => {
         body: JSON.stringify(data),
       });
 
+      const res = await response.json();
       if (!response.ok) {
-        const error = await response.json();
         throw new Error(
-          error.message || "Erreur lors de la modification du site"
+          res.message || "Erreur lors de la modification du site"
         );
       }
-
-      return response.json();
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["sites"] });
-      queryClient.invalidateQueries({ queryKey: ["sites", variables.id] });
-    },
-  });
-};
-
-// DELETE site
-export const useDeleteSite = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      const response = await fetch(`${API}/sites/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(
-          error.message || "Erreur lors de la suppression du site"
-        );
-      }
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sites"] });
     },
   });
+
+  const deleteSite = useMutation<void, Error, string>({
+    mutationFn: async (id: string): Promise<void> => {
+      const response = await fetch(`${API}/sites/${id}`, {
+        method: "DELETE",
+      });
+
+      const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.message || "Erreur lors de la suppression du site");
+      }
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sites"] });
+    },
+  });
+
+  return {
+    sitesQuery,
+    createSite,
+    updateSite,
+    deleteSite,
+  };
 };

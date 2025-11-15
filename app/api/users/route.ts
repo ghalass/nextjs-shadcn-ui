@@ -20,7 +20,13 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json(users);
+    // Exclure le password de chaque utilisateur
+    const usersWithoutPassword = users.map((user) => {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    });
+
+    return NextResponse.json(usersWithoutPassword);
   } catch (error) {
     console.error("Erreur GET /api/users:", error);
     return NextResponse.json(
@@ -29,7 +35,6 @@ export async function GET() {
     );
   }
 }
-
 // POST - Créer un utilisateur
 export async function POST(request: Request) {
   try {
@@ -86,7 +91,9 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(user, { status: 201 });
+    const { password: _, ...userWithoutPassword } = user;
+
+    return NextResponse.json(userWithoutPassword, { status: 201 });
   } catch (error) {
     console.error("Erreur POST /api/users:", error);
     return NextResponse.json(

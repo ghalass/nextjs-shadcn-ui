@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     console.log("Request body:", body);
 
-    const { name, resource, action, description } = body;
+    const { name, resourceId, action, description } = body;
 
     const existingPermission = await prisma.permission.findUnique({
       where: { id },
@@ -82,7 +82,7 @@ export async function PUT(request: NextRequest) {
       where: { id },
       data: {
         ...(name !== undefined && { name }),
-        ...(resource !== undefined && { resource }),
+        ...(resourceId !== undefined && { resourceId }),
         ...(action !== undefined && { action }),
         ...(description !== undefined && { description }),
       },

@@ -1,11 +1,14 @@
 // app/roles/create/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { usePermissions } from "@/hooks/usePermissions";
+import {
+  usePermissions,
+  type PermissionWithResource,
+} from "@/hooks/usePermissions";
 import { useRoles } from "@/hooks/useRoles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +46,7 @@ const roleSchema = Yup.object({
 
 export default function CreateRolePage() {
   const router = useRouter();
-  const permissionsQuery = usePermissions();
+  const { permissionsQuery } = usePermissions();
   const { createRole } = useRoles();
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -66,21 +69,10 @@ export default function CreateRolePage() {
           return;
         }
 
-        // S'assurer que toutes les permissions sont des strings
-        const validPermissions = values.permissions.filter(
-          (permission): permission is string =>
-            typeof permission === "string" && permission.length > 0
-        );
-
-        if (validPermissions.length === 0) {
-          setError("Aucune permission valide sélectionnée");
-          return;
-        }
-
         const roleData = {
           name: values.name.trim(),
           description: values.description.trim() || undefined,
-          permissions: validPermissions,
+          permissions: values.permissions,
         };
 
         console.log("Données envoyées à l'API:", roleData);
@@ -95,27 +87,40 @@ export default function CreateRolePage() {
     },
   });
 
-  // Filtrage des permissions avec typage sécurisé
-  const filteredPermissions =
-    permissionsQuery.data?.filter((permission) => {
+  // CORRECTION : Vérifier explicitement que data est un tableau
+  const permissionsData: PermissionWithResource[] = Array.isArray(
+    permissionsQuery.data
+  )
+    ? permissionsQuery.data
+    : [];
+
+  console.log("🔄 Permissions data for rendering:", permissionsData);
+  console.log("🔄 Permissions data length:", permissionsData.length);
+
+  // CORRECTION : Utiliser resource.name au lieu de resource directement
+  const filteredPermissions = permissionsData.filter(
+    (permission: PermissionWithResource) => {
       const searchLower = searchTerm.toLowerCase();
+      const resourceName = permission.resource?.name || "Autres";
       return (
         permission.name.toLowerCase().includes(searchLower) ||
-        permission.resource.toLowerCase().includes(searchLower) ||
+        resourceName.toLowerCase().includes(searchLower) ||
         permission.action.toLowerCase().includes(searchLower) ||
         (permission.description &&
           permission.description.toLowerCase().includes(searchLower))
       );
-    }) || [];
-
-  // Groupement des permissions par ressource avec typage
-  const groupedPermissions = filteredPermissions.reduce((acc, permission) => {
-    if (!acc[permission.resource]) {
-      acc[permission.resource] = [];
     }
-    acc[permission.resource].push(permission);
+  );
+
+  // CORRECTION : Grouper par resource.name
+  const groupedPermissions = filteredPermissions.reduce((acc, permission) => {
+    const resourceName = permission.resource?.name || "Autres";
+    if (!acc[resourceName]) {
+      acc[resourceName] = [];
+    }
+    acc[resourceName].push(permission);
     return acc;
-  }, {} as Record<string, typeof filteredPermissions>);
+  }, {} as Record<string, PermissionWithResource[]>);
 
   const handlePermissionChange = (permissionId: string, checked: boolean) => {
     const currentPermissions = formik.values.permissions;
@@ -128,17 +133,36 @@ export default function CreateRolePage() {
     }
 
     formik.setFieldValue("permissions", newPermissions);
-
-    // Déclencher la validation
     formik.setFieldTouched("permissions", true);
   };
 
   const isSubmitting = createRole.isPending;
 
+  // États de chargement améliorés
   if (permissionsQuery.isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Chargement des permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (permissionsQuery.isError) {
+    return (
+      <div className="container mx-auto py-10">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Erreur lors du chargement des permissions:{" "}
+            {(permissionsQuery.error as Error)?.message}
+          </AlertDescription>
+        </Alert>
+        <Button onClick={() => permissionsQuery.refetch()} className="mt-4">
+          Réessayer
+        </Button>
       </div>
     );
   }
@@ -163,12 +187,10 @@ export default function CreateRolePage() {
     let newPermissions: string[];
 
     if (checked) {
-      // Ajouter les permissions de la ressource (sans doublons)
       newPermissions = [
         ...new Set([...currentPermissions, ...resourcePermissionIds]),
       ];
     } else {
-      // Retirer les permissions de la ressource
       newPermissions = currentPermissions.filter(
         (id) => !resourcePermissionIds.includes(id)
       );
@@ -184,25 +206,12 @@ export default function CreateRolePage() {
     filteredPermissionIds.length > 0 &&
     filteredPermissionIds.every((id) => formik.values.permissions.includes(id));
 
-  if (permissionsQuery.isError) {
-    return (
-      <div className="container mx-auto py-10">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Erreur lors du chargement des permissions
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Calcul des statistiques avec typage sécurisé
+  // CORRECTION : Calculer les ressources couvertes avec resource.name
   const selectedPermissionsCount = formik.values.permissions.length;
   const coveredResourcesCount = new Set(
-    permissionsQuery.data
-      ?.filter((p) => formik.values.permissions.includes(p.id))
-      .map((p) => p.resource) || []
+    permissionsData
+      .filter((p) => formik.values.permissions.includes(p.id))
+      .map((p) => p.resource?.name || "Autres")
   ).size;
 
   return (
@@ -312,8 +321,15 @@ export default function CreateRolePage() {
                     </span>
                     <span className="font-medium">{coveredResourcesCount}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Permissions disponibles:
+                    </span>
+                    <span className="font-medium">
+                      {permissionsData.length}
+                    </span>
+                  </div>
 
-                  {/* Affichage des erreurs de permissions */}
                   {formik.touched.permissions &&
                     formik.values.permissions.length === 0 && (
                       <div className="mt-2">
@@ -360,6 +376,10 @@ export default function CreateRolePage() {
                   <CardTitle>Permissions</CardTitle>
                   <CardDescription>
                     Sélectionnez les permissions associées à ce rôle
+                    <span className="ml-2 text-muted-foreground">
+                      ({permissionsData.length} disponible
+                      {permissionsData.length !== 1 ? "s" : ""})
+                    </span>
                   </CardDescription>
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -398,105 +418,117 @@ export default function CreateRolePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="max-h-[600px] overflow-y-auto space-y-6">
-                    {Object.entries(groupedPermissions).map(
-                      ([resource, resourcePermissions]) => {
-                        const resourcePermissionIds = resourcePermissions.map(
-                          (p) => p.id
-                        );
-                        const isResourceAllSelected =
-                          resourcePermissionIds.length > 0 &&
-                          resourcePermissionIds.every((id) =>
-                            formik.values.permissions.includes(id)
+                    {Object.keys(groupedPermissions).length > 0 ? (
+                      Object.entries(groupedPermissions).map(
+                        ([resourceName, resourcePermissions]) => {
+                          const resourcePermissionIds = resourcePermissions.map(
+                            (p) => p.id
                           );
+                          const isResourceAllSelected =
+                            resourcePermissionIds.length > 0 &&
+                            resourcePermissionIds.every((id) =>
+                              formik.values.permissions.includes(id)
+                            );
 
-                        return (
-                          <div key={resource} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="font-semibold text-lg capitalize">
-                                {resource}
-                              </h3>
+                          return (
+                            <div
+                              key={resourceName}
+                              className="border rounded-lg p-4"
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div>
+                                  <h3 className="font-semibold text-lg capitalize">
+                                    {resourceName}
+                                  </h3>
+                                  {resourcePermissions[0]?.resource?.label && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {resourcePermissions[0].resource.label}
+                                    </p>
+                                  )}
+                                </div>
 
-                              {/* Sélectionner tout - Par ressource */}
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`select-all-${resource}`}
-                                  checked={isResourceAllSelected}
-                                  onCheckedChange={(checked) =>
-                                    handleSelectAllInResource(
-                                      resource,
-                                      checked === true
-                                    )
-                                  }
-                                  disabled={isSubmitting}
-                                />
-                                <Label
-                                  htmlFor={`select-all-${resource}`}
-                                  className="text-sm font-medium cursor-pointer"
-                                >
-                                  {isResourceAllSelected
-                                    ? "Tout désélectionner"
-                                    : "Tout sélectionner"}
-                                </Label>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-3">
-                              {resourcePermissions.map((permission) => (
-                                <div
-                                  key={permission.id}
-                                  className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50"
-                                >
+                                {/* Sélectionner tout - Par ressource */}
+                                <div className="flex items-center space-x-2">
                                   <Checkbox
-                                    id={`permission-${permission.id}`}
-                                    checked={formik.values.permissions.includes(
-                                      permission.id
-                                    )}
+                                    id={`select-all-${resourceName}`}
+                                    checked={isResourceAllSelected}
                                     onCheckedChange={(checked) =>
-                                      handlePermissionChange(
-                                        permission.id,
+                                      handleSelectAllInResource(
+                                        resourceName,
                                         checked === true
                                       )
                                     }
                                     disabled={isSubmitting}
                                   />
-                                  <div className="flex-1 min-w-0">
-                                    <Label
-                                      htmlFor={`permission-${permission.id}`}
-                                      className="flex items-start justify-between cursor-pointer"
-                                    >
-                                      <div>
-                                        <div className="font-medium">
-                                          {permission.name}
-                                        </div>
-                                        {permission.description && (
-                                          <p className="text-sm text-muted-foreground mt-1">
-                                            {permission.description}
-                                          </p>
-                                        )}
-                                      </div>
-                                      <Badge
-                                        variant="outline"
-                                        className="ml-2 capitalize shrink-0"
-                                      >
-                                        {permission.action}
-                                      </Badge>
-                                    </Label>
-                                  </div>
+                                  <Label
+                                    htmlFor={`select-all-${resourceName}`}
+                                    className="text-sm font-medium cursor-pointer"
+                                  >
+                                    {isResourceAllSelected
+                                      ? "Tout désélectionner"
+                                      : "Tout sélectionner"}
+                                  </Label>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      }
-                    )}
+                              </div>
 
-                    {filteredPermissions.length === 0 && (
+                              <div className="grid grid-cols-1 gap-3">
+                                {resourcePermissions.map((permission) => (
+                                  <div
+                                    key={permission.id}
+                                    className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-muted/50"
+                                  >
+                                    <Checkbox
+                                      id={`permission-${permission.id}`}
+                                      checked={formik.values.permissions.includes(
+                                        permission.id
+                                      )}
+                                      onCheckedChange={(checked) =>
+                                        handlePermissionChange(
+                                          permission.id,
+                                          checked === true
+                                        )
+                                      }
+                                      disabled={isSubmitting}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <Label
+                                        htmlFor={`permission-${permission.id}`}
+                                        className="flex items-start justify-between cursor-pointer"
+                                      >
+                                        <div>
+                                          <div className="font-medium">
+                                            {permission.name}
+                                          </div>
+                                          {permission.description && (
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              {permission.description}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <Badge
+                                          variant="outline"
+                                          className="ml-2 capitalize shrink-0"
+                                        >
+                                          {permission.action}
+                                        </Badge>
+                                      </Label>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                      )
+                    ) : (
                       <div className="text-center py-8 text-muted-foreground">
                         <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>
                           {searchTerm
                             ? "Aucune permission trouvée pour votre recherche"
-                            : "Aucune permission disponible"}
+                            : permissionsData.length === 0
+                            ? "Aucune permission disponible dans le système"
+                            : "Aucune permission ne correspond aux critères"}
                         </p>
                       </div>
                     )}

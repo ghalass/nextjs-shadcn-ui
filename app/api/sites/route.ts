@@ -1,12 +1,12 @@
 // app/api/sites/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { protectReadRoute } from "@/lib/rbac/middleware";
+import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
 
 export async function GET(request: NextRequest) {
   try {
-    // Vérifier la permission de lecture des utilisateurs
-    const protectionError = await protectReadRoute(request, "users");
+    // Vérifier la permission de lecture des sites (pas "users")
+    const protectionError = await protectReadRoute(request, "sites");
     if (protectionError) return protectionError;
 
     const sites = await prisma.site.findMany({
@@ -25,12 +25,24 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier la permission de création des sites
+    const protectionError = await protectCreateRoute(request, "sites");
+    if (protectionError) return protectionError;
+
     const body = await request.json();
     const { name, active = true } = body;
 
+    // Validation basique
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      return NextResponse.json(
+        { message: "Le nom du site est requis" },
+        { status: 400 }
+      );
+    }
+
     const site = await prisma.site.create({
       data: {
-        name,
+        name: name.trim(),
         active,
       },
     });

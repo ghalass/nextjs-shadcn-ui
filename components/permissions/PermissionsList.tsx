@@ -74,10 +74,6 @@ export function PermissionsList({
       {permissions.length === 0 ? (
         <div className="text-center py-8 border rounded-lg">
           <p className="text-muted-foreground">Aucune permission trouvée</p>
-          <Button onClick={onCreate} className="mt-4">
-            <Plus className="mr-2 h-4 w-4" />
-            Créer la première permission
-          </Button>
         </div>
       ) : (
         <div className="border rounded-lg">
@@ -100,7 +96,7 @@ export function PermissionsList({
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {permission.resource}
+                      {permission.resource.name}
                     </Badge>
                   </TableCell>
                   <TableCell>

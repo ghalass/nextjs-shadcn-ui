@@ -216,9 +216,12 @@ export function useRoles() {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(
-            data.error || `Erreur ${res.status} lors de la suppression du rôle`
-          );
+          // 🔥 ICI : Récupérer le message d'erreur du backend
+          const errorMessage =
+            data.message ||
+            data.error ||
+            `Erreur ${res.status} lors de la suppression du rôle`;
+          throw new Error(errorMessage);
         }
 
         toast.success("Rôle supprimé avec succès !");
@@ -233,6 +236,7 @@ export function useRoles() {
     },
     onError: (error: Error) => {
       console.error("Erreur de suppression de rôle:", error);
+      // 🔥 ICI : Le toast affichera automatiquement le message d'erreur du backend
       toast.error(error.message || "Erreur lors de la suppression du rôle");
     },
   });
