@@ -1,19 +1,18 @@
 "use client";
 
 import {
-  Calendar,
   Home,
   InfoIcon,
-  Inbox,
-  Search,
   Settings,
   ChevronDown,
   Users,
   MapPin,
   Shield,
   FileText,
-  Building,
   ShieldUser,
+  Key,
+  KeyIcon,
+  LockKeyhole,
 } from "lucide-react";
 
 import {
@@ -21,7 +20,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -59,6 +57,9 @@ const configItems = [
     icon: MapPin,
     description: "Gérer les sites",
   },
+];
+
+const adminItems = [
   {
     title: "Utilisateurs",
     url: "/users",
@@ -155,6 +156,55 @@ export function AppSidebar() {
                     <SidebarMenuSub className="mt-1">
                       <SidebarMenuSubItem>
                         {configItems.map((item) => {
+                          const isActive = isActivePath(item.url);
+                          return (
+                            <SidebarMenuButton
+                              key={item.title}
+                              asChild
+                              isActive={isActive}
+                              className={cn(
+                                "pl-8 transition-all duration-200 hover:bg-accent/30",
+                                isActive &&
+                                  "bg-accent/80 text-accent-foreground font-medium"
+                              )}
+                              tooltip={item.description}
+                            >
+                              <Link href={item.url}>
+                                <item.icon className="w-4 h-4" />
+                                <span>{item.title}</span>
+                                {isActive && (
+                                  <div className="ml-auto w-1 h-3 bg-primary rounded-full" />
+                                )}
+                              </Link>
+                            </SidebarMenuButton>
+                          );
+                        })}
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+
+              {/* Section Administateur avec améliorations */}
+              <Collapsible className="group/collapsible" defaultOpen={false}>
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                      className="w-full justify-between hover:bg-accent/50 transition-all duration-200"
+                      tooltip="Paramètres et Administateur"
+                    >
+                      <div className="flex items-center gap-2">
+                        <LockKeyhole className="w-4 h-4" />
+                        <span>Administateur</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 text-muted-foreground" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+
+                  <CollapsibleContent className="CollapsibleContent">
+                    <SidebarMenuSub className="mt-1">
+                      <SidebarMenuSubItem>
+                        {adminItems.map((item) => {
                           const isActive = isActivePath(item.url);
                           return (
                             <SidebarMenuButton
