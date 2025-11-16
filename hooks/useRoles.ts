@@ -68,9 +68,7 @@ export function useRoles() {
           permissions: validPermissions,
         };
 
-        console.log("🔹 Envoi des données:", payload);
-
-        const res = await fetch(`${API}/roles`, {
+        const response = await fetch(`${API}/roles`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -78,18 +76,11 @@ export function useRoles() {
           body: JSON.stringify(payload),
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          const errorMessage =
-            data.error ||
-            data.details?.[0] ||
-            `Erreur ${res.status} lors de la création du rôle`;
-          throw new Error(errorMessage);
+        const res = await response.json();
+        if (!response.ok) {
+          throw new Error(res.message || "Erreur lors de la création du rôle");
         }
-
-        toast.success("Rôle ajouté avec succès !");
-        return data;
+        return res;
       } catch (error) {
         console.error("Erreur dans createRole:", error);
         throw error;
@@ -158,18 +149,13 @@ export function useRoles() {
           body: JSON.stringify(updateData),
         });
 
+        const res = await response.json();
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
           throw new Error(
-            errorData.error ||
-              errorData.message ||
-              `Erreur ${response.status} lors de la modification du rôle`
+            res.message || "Erreur lors de la modification du rôle"
           );
         }
-
-        const result = await response.json();
-        toast.success("Rôle modifié avec succès !");
-        return result;
+        return res;
       } catch (error) {
         console.error("Erreur dans updateRole:", error);
         throw error;
@@ -193,23 +179,17 @@ export function useRoles() {
           throw new Error("ID de rôle invalide");
         }
 
-        const res = await fetch(`${API}/roles/${id}`, {
+        const response = await fetch(`${API}/roles/${id}`, {
           method: "DELETE",
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          // 🔥 ICI : Récupérer le message d'erreur du backend
-          const errorMessage =
-            data.message ||
-            data.error ||
-            `Erreur ${res.status} lors de la suppression du rôle`;
-          throw new Error(errorMessage);
+        const res = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            res.message || "Erreur lors de la suppression du rôle"
+          );
         }
-
-        toast.success("Rôle supprimé avec succès !");
-        return data;
+        return res;
       } catch (error) {
         console.error("Erreur dans deleteRole:", error);
         throw error;

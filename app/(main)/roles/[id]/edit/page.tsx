@@ -166,9 +166,6 @@ export default function EditRolePage() {
     ? permissionsQuery.data
     : [];
 
-  console.log("🔄 Permissions data for rendering:", permissionsData);
-  console.log("🔄 Permissions data length:", permissionsData.length);
-
   // CORRECTION : Utiliser resource.name au lieu de resource directement
   const filteredPermissions = permissionsData.filter(
     (permission: PermissionWithResource) => {
@@ -316,7 +313,7 @@ export default function EditRolePage() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="max-w-4xl mx-auto">
+      <div className=" mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Button variant="outline" size="icon" asChild>
@@ -528,7 +525,7 @@ export default function EditRolePage() {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <div className="max-h-[600px] overflow-y-auto space-y-6">
+                  <div className=" overflow-y-auto space-y-6">
                     {Object.keys(groupedPermissions).length > 0 ? (
                       Object.entries(groupedPermissions).map(
                         ([resourceName, resourcePermissions]) => {
