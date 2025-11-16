@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { User } from "@/lib/types/user.types";
+import { User } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 
 interface DeleteUserModalProps {

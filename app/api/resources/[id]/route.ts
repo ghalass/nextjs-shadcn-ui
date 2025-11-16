@@ -1,16 +1,27 @@
 // app/api/resources/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { protectRoute } from "@/lib/rbac/middleware";
+import {
+  protectDeleteRoute,
+  protectReadRoute,
+  protectRoute,
+  protectUpdateRoute,
+} from "@/lib/rbac/middleware";
 
 function getIdFromUrl(url: string): string {
   const pathSegments = new URL(url).pathname.split("/");
   return pathSegments[pathSegments.length - 1];
 }
 
+const the_resource = "resources";
+
 // GET - Récupérer une ressource spécifique
 export async function GET(request: NextRequest) {
   try {
+    // Vérifier la permission de lecture des ressources
+    const protectionError = await protectReadRoute(request, the_resource);
+    if (protectionError) return protectionError;
+
     const id = getIdFromUrl(request.url);
 
     if (!id || id === "resources") {
@@ -19,10 +30,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Vérifier la permission de lecture des ressources
-    const protectionError = await protectRoute(request, "read", "resources");
-    if (protectionError) return protectionError;
 
     const resource = await prisma.resource.findUnique({
       where: { id },
@@ -59,6 +66,9 @@ export async function GET(request: NextRequest) {
 // PUT - Modifier une ressource
 export async function PUT(request: NextRequest) {
   try {
+    // Vérifier la permission de modification des ressources
+    const protectionError = await protectUpdateRoute(request, the_resource);
+    if (protectionError) return protectionError;
     const id = getIdFromUrl(request.url);
 
     if (!id || id === "resources") {
@@ -67,10 +77,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Vérifier la permission de modification des ressources
-    const protectionError = await protectRoute(request, "update", "resources");
-    if (protectionError) return protectionError;
 
     const body = await request.json();
     const { name, label } = body;
@@ -131,6 +137,10 @@ export async function PUT(request: NextRequest) {
 // DELETE - Supprimer une ressource
 export async function DELETE(request: NextRequest) {
   try {
+    // Vérifier la permission de suppression des ressources
+    const protectionError = await protectDeleteRoute(request, the_resource);
+    if (protectionError) return protectionError;
+
     const id = getIdFromUrl(request.url);
 
     if (!id || id === "resources") {
@@ -139,10 +149,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Vérifier la permission de suppression des ressources
-    const protectionError = await protectRoute(request, "delete", "resources");
-    if (protectionError) return protectionError;
 
     const existingResource = await prisma.resource.findUnique({
       where: { id },

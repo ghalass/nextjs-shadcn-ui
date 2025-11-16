@@ -33,7 +33,7 @@ export const useResources = () => {
 
   // 🔹 FETCH RESOURCES
   const resourcesQuery = useQuery<Resource[]>({
-    queryKey: ["permissions"],
+    queryKey: ["resources"],
     queryFn: async (): Promise<Resource[]> => {
       const response = await fetch(`${API}/resources`);
       const data = await response.json();

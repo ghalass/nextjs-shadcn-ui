@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
 
+const resource = "sites";
+
 export async function GET(request: NextRequest) {
   try {
     // Vérifier la permission de lecture des sites (pas "users")
-    const protectionError = await protectReadRoute(request, "sites");
+    const protectionError = await protectReadRoute(request, resource);
     if (protectionError) return protectionError;
 
     const sites = await prisma.site.findMany({
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Vérifier la permission de création des sites
-    const protectionError = await protectCreateRoute(request, "sites");
+    const protectionError = await protectCreateRoute(request, resource);
     if (protectionError) return protectionError;
 
     const body = await request.json();

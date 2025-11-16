@@ -436,7 +436,7 @@ export function PermissionForm({
             <SelectContent>
               {resources.map((resource) => (
                 <SelectItem key={resource.id} value={resource.id}>
-                  {resource.name}
+                  {resource.label}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -35,14 +35,14 @@ export default function ResourcesPage() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (resource: Resource): void => {
-    setSelectedResource(resource);
+  const handleEdit = (resource: any): void => {
+    setSelectedResource(resource as Resource);
     setError(null);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (resource: Resource): void => {
-    setSelectedResource(resource);
+  const handleDelete = (resource: any): void => {
+    setSelectedResource(resource as Resource);
     setError(null);
     setIsDeleteModalOpen(true);
   };

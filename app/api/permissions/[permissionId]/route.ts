@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getRouteParams } from "@/lib/routeParams";
+import {
+  protectDeleteRoute,
+  protectReadRoute,
+  protectUpdateRoute,
+} from "@/lib/rbac/middleware";
 
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
+const the_resource = "permissions";
+
 export async function GET(request: NextRequest) {
   try {
+    const protectionError = await protectReadRoute(request, the_resource);
+    if (protectionError) return protectionError;
+
     console.log("=== GET Permission Request ===");
     const { id } = await getRouteParams(request);
     console.log("GET request for permission ID:", id);
@@ -50,6 +60,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const protectionError = await protectUpdateRoute(request, the_resource);
+    if (protectionError) return protectionError;
+
     console.log("=== PUT Permission Request ===");
     const { id } = await getRouteParams(request);
     console.log("PUT request for permission ID:", id);
@@ -121,9 +134,10 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    console.log("=== DELETE Permission Request ===");
+    const protectionError = await protectDeleteRoute(request, the_resource);
+    if (protectionError) return protectionError;
+
     const { id } = await getRouteParams(request);
-    console.log("DELETE request for permission ID:", id);
 
     if (!id) {
       return NextResponse.json(

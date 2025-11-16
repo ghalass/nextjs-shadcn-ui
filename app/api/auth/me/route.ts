@@ -23,10 +23,18 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, name: true, email: true, roles: true },
+      include: {
+        roles: {
+          include: {
+            role: true,
+          },
+        },
+      },
     });
 
-    return NextResponse.json({ user });
+    const { password, ...userWithoutPassword } = user || {};
+
+    return NextResponse.json({ user: userWithoutPassword });
   } catch (error) {
     console.error(
       "Erreur lors de récupération de l'utilisateur conncté:",

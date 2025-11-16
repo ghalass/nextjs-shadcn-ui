@@ -1,15 +1,21 @@
 // app/api/users/[id]/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { userUpdateSchema } from "@/lib/validations/userSchema";
+import { protectDeleteRoute, protectUpdateRoute } from "@/lib/rbac/middleware";
+
+const resource = "users";
 
 // PATCH - Mettre à jour un utilisateur
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const protectionError = await protectUpdateRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const { id } = await params;
     const body = await request.json();
 
@@ -102,10 +108,13 @@ export async function PATCH(
 
 // DELETE - Supprimer un utilisateur
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const protectionError = await protectDeleteRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const { id } = await params;
 
     // Vérifier si l'utilisateur existe

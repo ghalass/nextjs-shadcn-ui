@@ -1,19 +1,27 @@
 // app/api/roles/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  protectCreateRoute,
+  protectDeleteRoute,
+  protectReadRoute,
+  protectUpdateRoute,
+} from "@/lib/rbac/middleware";
 
 function getIdFromUrl(url: string): string {
   const pathSegments = new URL(url).pathname.split("/");
   return pathSegments[pathSegments.length - 1];
 }
 
+const resource = "roles";
+
 // GET - Récupérer un rôle spécifique
 export async function GET(request: NextRequest) {
   try {
+    const protectionError = await protectReadRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const id = getIdFromUrl(request.url);
-
-    console.log("GET role request for ID:", id);
-
     if (!id || id === "roles") {
       return NextResponse.json(
         { message: "ID du rôle requis" },
@@ -49,6 +57,9 @@ export async function GET(request: NextRequest) {
 // PUT - Modifier un rôle
 export async function PUT(request: NextRequest) {
   try {
+    const protectionError = await protectUpdateRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const id = getIdFromUrl(request.url);
 
     if (!id || id === "roles") {
@@ -135,6 +146,9 @@ export async function PUT(request: NextRequest) {
 // DELETE - Supprimer un rôle
 export async function DELETE(request: NextRequest) {
   try {
+    const protectionError = await protectDeleteRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const id = getIdFromUrl(request.url);
 
     if (!id || id === "roles") {

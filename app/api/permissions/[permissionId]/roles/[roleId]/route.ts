@@ -5,14 +5,16 @@ import {
   assignPermissionToRole,
   removePermissionFromRole,
 } from "@/lib/rbac/core";
-import { protectManageRoute } from "@/lib/rbac/middleware";
+import { protectCreateRoute, protectDeleteRoute } from "@/lib/rbac/middleware";
+
+const the_resource = "permissions";
 
 export async function POST(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { permissionId: string; roleId: string } }
 ) {
   // 🔒 Vérifier les permissions
-  const protectionError = await protectManageRoute(req, "permissions");
+  const protectionError = await protectCreateRoute(request, the_resource);
   if (protectionError) return protectionError;
 
   const { permissionId, roleId } = await params;
@@ -41,11 +43,11 @@ export async function POST(
 }
 
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { permissionId: string; roleId: string } }
 ) {
   // 🔒 Vérifier les permissions
-  const protectionError = await protectManageRoute(req, "permissions");
+  const protectionError = await protectDeleteRoute(request, the_resource);
   if (protectionError) return protectionError;
 
   const { permissionId, roleId } = await params;

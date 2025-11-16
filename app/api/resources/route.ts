@@ -1,15 +1,15 @@
 // app/api/resources/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { protectRoute } from "@/lib/rbac/middleware";
-import { hasRole } from "@/lib/rbac/core";
-import { getSession } from "@/lib/auth";
+import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
+
+const the_resource = "resources";
 
 // GET - Récupérer toutes les ressources
 export async function GET(request: NextRequest) {
   try {
     // Vérifier la permission de lecture des ressources
-    const protectionError = await protectRoute(request, "read", "resources");
+    const protectionError = await protectReadRoute(request, the_resource);
     if (protectionError) return protectionError;
 
     const resources = await prisma.resource.findMany({
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Vérifier la permission de création des ressources
-    const protectionError = await protectRoute(request, "create", "resources");
+    const protectionError = await protectCreateRoute(request, the_resource);
     if (protectionError) return protectionError;
 
     const body = await request.json();

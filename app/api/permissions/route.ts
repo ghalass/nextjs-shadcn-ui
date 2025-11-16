@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { protectReadRoute } from "@/lib/rbac/middleware";
+import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
+
+const the_resource = "permissions";
 
 export async function GET(request: NextRequest) {
   try {
-    const protectionError = await protectReadRoute(request, "permissions");
+    const protectionError = await protectReadRoute(request, the_resource);
     if (protectionError) return protectionError;
 
     const permissions = await prisma.permission.findMany({
@@ -26,6 +28,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const protectionError = await protectCreateRoute(request, the_resource);
+    if (protectionError) return protectionError;
+
     const body = await request.json();
     const { name, resourceId, action, description } = body;
 

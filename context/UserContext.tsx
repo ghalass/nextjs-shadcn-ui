@@ -9,7 +9,29 @@ import {
   ReactNode,
 } from "react";
 
-type User = { id: string; name: string; email: string; role: string } | null;
+type UserRole = {
+  role: {
+    name: string;
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    description: string | null;
+  };
+} & {
+  id: string;
+  createdAt: Date;
+  userId: string;
+  roleId: string;
+};
+
+type User = {
+  roles: UserRole[];
+  name: string;
+  id: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+} | null; // Utilisez null au lieu d'un objet vide
 
 interface UserContextType {
   user: User;
@@ -20,12 +42,21 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User>(null);
+  const [user, setUser] = useState<User>(null); // Initialisez avec null
 
   async function refreshUser() {
-    const res = await fetch(`${API}/auth/me`);
-    const data = await res.json();
-    setUser(data.user);
+    try {
+      const res = await fetch(`${API}/auth/me`);
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      setUser(null);
+    }
   }
 
   useEffect(() => {

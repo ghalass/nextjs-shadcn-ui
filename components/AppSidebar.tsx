@@ -106,8 +106,6 @@ export function AppSidebar() {
     <Sidebar variant="floating" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          {/* <SidebarGroupLabel>Application</SidebarGroupLabel> */}
-
           <SidebarGroupContent>
             <SidebarMenu>
               {/* Liens principaux */}

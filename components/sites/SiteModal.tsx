@@ -37,7 +37,10 @@ export function SiteModal({
     <Dialog open={open} onOpenChange={onClose}>
       {" "}
       {/* ✅ Passez onClose à onOpenChange */}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

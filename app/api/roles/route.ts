@@ -2,13 +2,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { roleCreateSchema } from "@/lib/validations/roleSchema";
-import { protectReadRoute } from "@/lib/rbac/middleware";
+import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
+
+const resource = "roles";
 
 // GET - Récupérer tous les rôles
 export async function GET(request: NextRequest) {
   try {
-    const protectionError = await protectReadRoute(request, "roles");
+    const protectionError = await protectReadRoute(request, resource);
     if (protectionError) return protectionError;
+
     const roles = await prisma.role.findMany({
       include: {
         permissions: {
@@ -35,6 +38,9 @@ export async function GET(request: NextRequest) {
 // POST - Créer un rôle
 export async function POST(request: NextRequest) {
   try {
+    const protectionError = await protectCreateRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const body = await request.json();
 
     // Validation avec Yup

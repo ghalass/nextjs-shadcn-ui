@@ -34,7 +34,7 @@ export async function protectRoute(
 
     if (!hasAccess) {
       return NextResponse.json(
-        { message: "Accès non autorisé" },
+        { message: "Opération non autorisée" },
         { status: 403 }
       );
     }

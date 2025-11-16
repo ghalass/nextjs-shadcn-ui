@@ -1,12 +1,22 @@
 // app/api/sites/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import {
+  protectDeleteRoute,
+  protectReadRoute,
+  protectUpdateRoute,
+} from "@/lib/rbac/middleware";
+
+const resource = "sites";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const protectionError = await protectReadRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const { id } = await params;
 
     if (!id) {
@@ -39,6 +49,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const protectionError = await protectUpdateRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const { id } = await params;
 
     if (!id) {
@@ -106,6 +119,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const protectionError = await protectDeleteRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const { id } = await params;
 
     if (!id) {

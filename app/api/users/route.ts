@@ -3,12 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { userCreateSchema } from "@/lib/validations/userSchema";
-import { protectReadRoute } from "@/lib/rbac/middleware";
+import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
+
+const resource = "users";
 
 // GET - Récupérer tous les utilisateurs
 export async function GET(request: NextRequest) {
   try {
-    const protectionError = await protectReadRoute(request, "users");
+    const protectionError = await protectReadRoute(request, resource);
     if (protectionError) return protectionError;
 
     const users = await prisma.user.findMany({
@@ -40,8 +42,11 @@ export async function GET(request: NextRequest) {
   }
 }
 // POST - Créer un utilisateur
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const protectionError = await protectCreateRoute(request, resource);
+    if (protectionError) return protectionError;
+
     const body = await request.json();
 
     // Validation avec Yup
