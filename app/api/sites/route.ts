@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
 
-const resource = "sites";
+const resource = "site";
 
 export async function GET(request: NextRequest) {
   try {

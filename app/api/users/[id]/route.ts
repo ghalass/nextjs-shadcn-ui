@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { userUpdateSchema } from "@/lib/validations/userSchema";
 import { protectDeleteRoute, protectUpdateRoute } from "@/lib/rbac/middleware";
 
-const resource = "users";
+const resource = "user";
 
 // PATCH - Mettre à jour un utilisateur
 export async function PATCH(

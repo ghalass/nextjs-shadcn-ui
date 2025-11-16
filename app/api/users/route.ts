@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { userCreateSchema } from "@/lib/validations/userSchema";
 import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
 
-const resource = "users";
+const resource = "user";
 
 // GET - Récupérer tous les utilisateurs
 export async function GET(request: NextRequest) {

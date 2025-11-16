@@ -7,7 +7,7 @@ import {
   protectUpdateRoute,
 } from "@/lib/rbac/middleware";
 
-const resource = "sites";
+const resource = "site";
 
 export async function GET(
   request: NextRequest,

@@ -5,6 +5,10 @@ import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
 
 const the_resource = "resources";
 
+interface TableInfo {
+  table_name: string;
+}
+
 // GET - Récupérer toutes les ressources
 export async function GET(request: NextRequest) {
   try {

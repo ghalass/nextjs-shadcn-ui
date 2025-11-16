@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { roleCreateSchema } from "@/lib/validations/roleSchema";
 import { protectCreateRoute, protectReadRoute } from "@/lib/rbac/middleware";
 
-const resource = "roles";
+const resource = "role";
 
 // GET - Récupérer tous les rôles
 export async function GET(request: NextRequest) {

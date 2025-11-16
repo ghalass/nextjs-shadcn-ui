@@ -13,7 +13,7 @@ function getIdFromUrl(url: string): string {
   return pathSegments[pathSegments.length - 1];
 }
 
-const resource = "roles";
+const resource = "role";
 
 // GET - Récupérer un rôle spécifique
 export async function GET(request: NextRequest) {
