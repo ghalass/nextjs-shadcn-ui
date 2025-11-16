@@ -254,11 +254,11 @@ export default function RegisterPage() {
               Se connecter
             </Link>
           </p>
-          <p className="text-sm text-gray-500 mt-4 text-center">
+          {/* <p className="text-sm text-gray-500 mt-4 text-center">
             <Link href="/" className="text-blue-500 hover:underline">
               Page d'accueil
             </Link>
-          </p>
+          </p> */}
         </CardFooter>
       </Card>
     </div>
