@@ -33,15 +33,16 @@ export const useResources = () => {
 
   // 🔹 FETCH RESOURCES
   const resourcesQuery = useQuery<Resource[]>({
-    queryKey: ["resources"],
+    queryKey: ["permissions"],
     queryFn: async (): Promise<Resource[]> => {
       const response = await fetch(`${API}/resources`);
-
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error("Erreur lors du chargement des ressources");
+        throw new Error(
+          data.message || "Erreur lors du chargement des resources"
+        );
       }
-
-      return response.json();
+      return data;
     },
   });
 

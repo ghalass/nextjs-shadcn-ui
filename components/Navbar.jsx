@@ -6,7 +6,7 @@ import AuthButtons from "./AuthButtons";
 
 export default function Navbar() {
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-x border-t rounded-t-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="flex items-center justify-between px-4 py-3 border-l border-r border-t rounded-t-md bg-background/95 backdrop-blur">
       <div className="flex items-center gap-4">
         <SidebarTrigger className="hover:bg-accent transition-colors rounded-md p-2" />
         <div className="hidden sm:block">

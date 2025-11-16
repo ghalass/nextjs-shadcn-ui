@@ -13,25 +13,38 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Pencil, Trash2, Shield } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Pencil,
+  Trash2,
+  Shield,
+  AlertCircle,
+} from "lucide-react";
 import { DeleteRoleModal } from "@/components/roles/DeleteRoleModal";
 import { Role } from "@/lib/types";
 import Link from "next/link";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function RolesPage() {
   const { rolesQuery, deleteRole } = useRoles();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDelete = (role: Role) => {
     setSelectedRole(role);
+    setError(null);
     setIsDeleteModalOpen(true);
   };
 
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
+    setError(null);
     setSelectedRole(null);
   };
+
+  const displayError = error || rolesQuery.error?.message || null;
 
   if (rolesQuery.isLoading) {
     return (
@@ -60,6 +73,13 @@ export default function RolesPage() {
           </Link>
         </Button>
       </div>
+
+      {displayError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{displayError}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="border rounded-lg">
         <Table>

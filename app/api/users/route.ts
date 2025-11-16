@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const protectionError = await protectReadRoute(request, "users");
     if (protectionError) return protectionError;
+
     const users = await prisma.user.findMany({
       include: {
         roles: {

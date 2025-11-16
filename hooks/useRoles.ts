@@ -26,32 +26,16 @@ export function useRoles() {
   const queryClient = useQueryClient();
 
   // 🔹 FETCH ROLES
-  const rolesQuery = useQuery<Role[], Error>({
+  const rolesQuery = useQuery<Role[]>({
     queryKey: ["roles"],
     queryFn: async (): Promise<Role[]> => {
-      try {
-        const res = await fetch(`${API}/roles`);
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({
-            error: `Erreur HTTP: ${res.status} ${res.statusText}`,
-          }));
-          throw new Error(
-            errorData.error || "Erreur lors de la récupération des rôles"
-          );
-        }
-
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.error("Erreur dans rolesQuery:", error);
-        throw error instanceof Error
-          ? error
-          : new Error("Erreur inconnue lors de la récupération des rôles");
+      const response = await fetch(`${API}/roles`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Erreur lors du chargement des roles");
       }
+      return data;
     },
-    enabled: true,
-    retry: 2,
   });
 
   // 🔹 CREATE ROLE

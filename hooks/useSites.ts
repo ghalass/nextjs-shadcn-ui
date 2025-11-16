@@ -22,11 +22,11 @@ export const useSites = () => {
     queryKey: ["sites"],
     queryFn: async (): Promise<Site[]> => {
       const response = await fetch(`${API}/sites`);
-      const res = await response.json();
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(res.message || "Erreur lors du chargement des sites");
+        throw new Error(data.message || "Erreur lors du chargement des sites");
       }
-      return res;
+      return data;
     },
   });
 

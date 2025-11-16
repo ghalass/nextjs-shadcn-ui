@@ -13,10 +13,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Pencil,
+  Trash2,
+  AlertCircle,
+  PersonStanding,
+  Users,
+} from "lucide-react";
 import { UserModal } from "@/components/users/UserModal";
 import { DeleteUserModal } from "@/components/users/DeleteUserModal";
 import { User } from "@/lib/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 // import { User, UserRole } from "@/lib/types/user.types";
 
 export default function UsersPage() {
@@ -26,31 +35,39 @@ export default function UsersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCreate = () => {
     setSelectedUser(null);
+    setError(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (user: User) => {
     setSelectedUser(user);
+    setError(null);
     setIsModalOpen(true);
   };
 
   const handleDelete = (user: User) => {
     setSelectedUser(user);
+    setError(null);
     setIsDeleteModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setError(null);
     setSelectedUser(null);
   };
 
   const handleCloseDeleteModal = () => {
     setIsDeleteModalOpen(false);
+    setError(null);
     setSelectedUser(null);
   };
+
+  const displayError = error || usersQuery.error?.message || null;
 
   if (usersQuery.isLoading || rolesQuery.isLoading) {
     return (
@@ -64,7 +81,10 @@ export default function UsersPage() {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des utilisateurs</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Users className="h-8 w-8" />
+            Gestion des utilisateurs
+          </h1>
           <p className="text-muted-foreground mt-1">
             Gérez les utilisateurs et leurs rôles
           </p>
@@ -74,6 +94,13 @@ export default function UsersPage() {
           Nouvel utilisateur
         </Button>
       </div>
+
+      {displayError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{displayError}</AlertDescription>
+        </Alert>
+      )}
 
       <div className="border rounded-lg">
         <Table>

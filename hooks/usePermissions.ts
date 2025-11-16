@@ -57,13 +57,14 @@ export const usePermissions = () => {
   // 🔹 FETCH PERMISSIONS
   const permissionsQuery = useQuery({
     queryKey: ["permissions"],
-    queryFn: async (): Promise<PermissionWithResource[]> => {
-      const response = await fetch("/api/permissions");
-      if (!response.ok) {
-        throw new Error("Erreur lors du chargement des permissions");
-      }
+    queryFn: async (): Promise<Permission[]> => {
+      const response = await fetch(`${API}/permissions`);
       const data = await response.json();
-      console.log("✅ Permissions loaded from API:", data);
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Erreur lors du chargement des permissions"
+        );
+      }
       return data;
     },
   });

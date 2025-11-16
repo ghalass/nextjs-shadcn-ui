@@ -7,8 +7,8 @@ export default function LogoutButton() {
   const { logout } = useAuth();
 
   return (
-    <button onClick={logout} className="flex items-center gap-1">
-      <LogOut size={20} /> Logout
+    <button onClick={logout} className="cursor-pointer flex items-center gap-2">
+      <LogOut className="w-4 h-4 text-destructive" /> Déconnexion
     </button>
   );
 }

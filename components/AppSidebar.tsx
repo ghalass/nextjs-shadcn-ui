@@ -13,6 +13,7 @@ import {
   Shield,
   FileText,
   Building,
+  ShieldUser,
 } from "lucide-react";
 
 import {
@@ -73,7 +74,7 @@ const configItems = [
   {
     title: "Permissions",
     url: "/permissions",
-    icon: Shield,
+    icon: ShieldUser,
     description: "Gérer les permissions",
   },
   {

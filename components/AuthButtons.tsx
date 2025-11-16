@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import LogoutButton from "./LogoutButton";
 
 export default function AuthButtons() {
   const { user } = useUser();
@@ -23,7 +24,7 @@ export default function AuthButtons() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-accent transition-colors duration-200 group">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/70 rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+              <div className="w-8 h-8 bg-linear-to-br from-primary to-primary/70 rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
                 {user.name?.charAt(0).toUpperCase() || (
                   <User className="w-4 h-4" />
                 )}
@@ -73,12 +74,8 @@ export default function AuthButtons() {
               asChild
               className="text-destructive focus:text-destructive"
             >
-              <Link
-                href="/logout"
-                className="cursor-pointer flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Déconnexion</span>
+              <Link href="#" className="cursor-pointer flex items-center gap-2">
+                <LogoutButton />
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>

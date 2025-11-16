@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Pencil, Trash2, Globe } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Globe, MapPin } from "lucide-react";
 import { SiteModal } from "@/components/sites/SiteModal";
 import { DeleteSiteModal } from "@/components/sites/DeleteSiteModal";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -105,7 +105,7 @@ export default function SitesPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Globe className="h-8 w-8" />
+            <MapPin className="h-8 w-8" />
             Gestion des sites
           </h1>
           <p className="text-muted-foreground mt-1">

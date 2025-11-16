@@ -15,14 +15,14 @@ export function useUsers() {
   // 🔹 FETCH USERS
   const usersQuery = useQuery<User[]>({
     queryKey: ["users"],
-    queryFn: async () => {
-      const res = await fetch(`${API}/users`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Erreur lors du fetch");
-      // ✅ Retourner le tableau directement
-      return data ?? [];
+    queryFn: async (): Promise<User[]> => {
+      const response = await fetch(`${API}/users`);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Erreur lors du chargement des users");
+      }
+      return data;
     },
-    enabled: true,
   });
 
   // 🔹 CREATE USER

@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, FileText } from "lucide-react";
 import { ResourceModal } from "@/components/resources/ResourceModal";
 import { DeleteConfirmationModal } from "@/components/resources/DeleteConfirmationModal";
 import { Resource, ResourceCreateDto, ResourceUpdateDto } from "@/lib/types";
@@ -111,7 +111,10 @@ export default function ResourcesPage() {
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Gestion des ressources</h1>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <FileText className="h-8 w-8" />
+            Gestion des ressources
+          </h1>
           <p className="text-muted-foreground mt-1">
             Gérez les ressources et leurs permissions
           </p>
