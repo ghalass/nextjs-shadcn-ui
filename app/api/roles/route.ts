@@ -1,11 +1,14 @@
 // app/api/roles/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { roleCreateSchema } from "@/lib/validations/roleSchema";
+import { protectReadRoute } from "@/lib/rbac/middleware";
 
 // GET - Récupérer tous les rôles
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const protectionError = await protectReadRoute(request, "roles");
+    if (protectionError) return protectionError;
     const roles = await prisma.role.findMany({
       include: {
         permissions: {
@@ -30,7 +33,7 @@ export async function GET() {
 }
 
 // POST - Créer un rôle
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 

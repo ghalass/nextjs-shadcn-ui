@@ -1,7 +1,6 @@
 // hooks/usePermissions.ts
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { API } from "@/lib/constantes";
-import { getSession } from "@/lib/auth";
 import { useAuthRoles } from "./useAuthRoles";
 
 // Type pour les permissions avec la ressource comme objet

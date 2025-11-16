@@ -35,7 +35,7 @@ export default function RolesPage() {
 
   if (rolesQuery.isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );

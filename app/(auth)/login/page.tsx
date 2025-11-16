@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import ModeToggle from "@/components/ModeToggle";
 import * as Yup from "@/lib/yupFr";
 import { useAuth } from "@/hooks/useAuth";
-import Spinner from "@/components/Spinner";
+import { Spinner } from "@/components/ui/spinner";
 import Link from "next/link";
 
 export default function LoginPage() {

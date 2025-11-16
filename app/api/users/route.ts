@@ -1,12 +1,15 @@
 // app/api/users/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { userCreateSchema } from "@/lib/validations/userSchema";
+import { protectReadRoute } from "@/lib/rbac/middleware";
 
 // GET - Récupérer tous les utilisateurs
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const protectionError = await protectReadRoute(request, "users");
+    if (protectionError) return protectionError;
     const users = await prisma.user.findMany({
       include: {
         roles: {

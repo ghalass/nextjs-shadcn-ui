@@ -1,14 +1,24 @@
-import React from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import ModeToggle from "@/components/ModeToggle"; // ✅ Default import (sans accolades)
+"use client";
+
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import ModeToggle from "@/components/ModeToggle";
 import AuthButtons from "./AuthButtons";
 
 export default function Navbar() {
   return (
-    <header className="flex items-center justify-between px-1 py-1 border-b">
-      <SidebarTrigger />
-      <ModeToggle />
-      <div className="flex items-center gap-2">
+    <header className="flex items-center justify-between px-4 py-3 border-x border-t rounded-t-md bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="hover:bg-accent transition-colors rounded-md p-2" />
+        <div className="hidden sm:block">
+          <h1 className="text-lg font-semibold text-foreground">
+            MonApplication
+          </h1>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4">
+        <ModeToggle />
+        <div className="h-6 w-px bg-border hidden sm:block" />
         <AuthButtons />
       </div>
     </header>
