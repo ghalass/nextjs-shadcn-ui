@@ -10,8 +10,6 @@ import {
   Shield,
   FileText,
   ShieldUser,
-  Key,
-  KeyIcon,
   LockKeyhole,
 } from "lucide-react";
 
@@ -34,7 +32,7 @@ import {
 } from "./ui/collapsible";
 import { cn } from "@/lib/utils";
 
-// Menu items avec améliorations
+// Menu items
 const mainItems = [
   {
     title: "Accueil",
@@ -119,7 +117,7 @@ export function AppSidebar() {
                       tooltip={item.description}
                       isActive={isActive}
                       className={cn(
-                        "transition-all duration-200 hover:bg-accent/50",
+                        "transition-all duration-200 hover:bg-accent",
                         isActive &&
                           "bg-accent text-accent-foreground font-medium"
                       )}
@@ -136,12 +134,12 @@ export function AppSidebar() {
                 );
               })}
 
-              {/* Section Configurations avec améliorations */}
+              {/* Section Configurations */}
               <Collapsible className="group/collapsible" defaultOpen={false}>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
-                      className="w-full justify-between hover:bg-accent/50 transition-all duration-200"
+                      className="w-full justify-between hover:bg-accent transition-all duration-200"
                       tooltip="Paramètres et configurations"
                     >
                       <div className="flex items-center gap-2">
@@ -163,9 +161,9 @@ export function AppSidebar() {
                               asChild
                               isActive={isActive}
                               className={cn(
-                                "pl-8 transition-all duration-200 hover:bg-accent/30",
+                                "pl-8 transition-all duration-200 hover:bg-accent",
                                 isActive &&
-                                  "bg-accent/80 text-accent-foreground font-medium"
+                                  "bg-accent text-accent-foreground font-medium"
                               )}
                               tooltip={item.description}
                             >
@@ -185,17 +183,17 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               </Collapsible>
 
-              {/* Section Administateur avec améliorations */}
+              {/* Section Administration */}
               <Collapsible className="group/collapsible" defaultOpen={false}>
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
-                      className="w-full justify-between hover:bg-accent/50 transition-all duration-200"
-                      tooltip="Paramètres et Administateur"
+                      className="w-full justify-between hover:bg-accent transition-all duration-200"
+                      tooltip="Administration du système"
                     >
                       <div className="flex items-center gap-2">
                         <LockKeyhole className="w-4 h-4" />
-                        <span>Administateur</span>
+                        <span>Administration</span>
                       </div>
                       <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180 text-muted-foreground" />
                     </SidebarMenuButton>
@@ -212,9 +210,9 @@ export function AppSidebar() {
                               asChild
                               isActive={isActive}
                               className={cn(
-                                "pl-8 transition-all duration-200 hover:bg-accent/30",
+                                "pl-8 transition-all duration-200 hover:bg-accent",
                                 isActive &&
-                                  "bg-accent/80 text-accent-foreground font-medium"
+                                  "bg-accent text-accent-foreground font-medium"
                               )}
                               tooltip={item.description}
                             >
@@ -236,26 +234,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Section supplémentaire pour les actions rapides */}
-        {/* <SidebarGroup className="mt-auto border-t border-border/40 pt-4">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  className="transition-all duration-200 hover:bg-accent/50"
-                  tooltip="Rechercher dans l'application"
-                >
-                  <Link href="/search">
-                    <Search className="w-4 h-4" />
-                    <span>Recherche</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup> */}
       </SidebarContent>
     </Sidebar>
   );

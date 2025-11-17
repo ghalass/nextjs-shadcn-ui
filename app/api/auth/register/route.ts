@@ -1,4 +1,5 @@
-// app/api/users/route.ts
+// POST /api/auth/register/route.ts
+
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { userCreateSchema } from "@/lib/validations/userSchema";
@@ -27,25 +28,42 @@ export async function POST(request: Request) {
         });
         body.role = [admin.id];
       } else {
-        body.role = [adminRole.id];
-      }
-    }
+        // sinon, attribuer le rôle "user" par défaut
+        const userRole = await prisma.role.findUnique({
+          where: { name: "user" },
+        });
 
-    // sinon, attribuer le rôle "user" par défaut
-    const userRole = await prisma.role.findUnique({
-      where: { name: "user" },
-    });
-    // si le rôle "user" n'existe pas, le créer
-    if (!userRole) {
-      const role = await prisma.role.create({
-        data: {
-          name: "user",
-          description: "Utilisateur standard",
-        },
-      });
-      body.role = [role.id];
+        // si le rôle "user" n'existe pas, le créer
+        if (!userRole) {
+          const role = await prisma.role.create({
+            data: {
+              name: "user",
+              description: "Utilisateur standard",
+            },
+          });
+          body.role = [role.id];
+        } else {
+          body.role = [userRole.id];
+        }
+      }
     } else {
-      body.role = [userRole.id];
+      // sinon, attribuer le rôle "user" par défaut
+      const userRole = await prisma.role.findUnique({
+        where: { name: "user" },
+      });
+
+      // si le rôle "user" n'existe pas, le créer
+      if (!userRole) {
+        const role = await prisma.role.create({
+          data: {
+            name: "user",
+            description: "Utilisateur standard",
+          },
+        });
+        body.role = [role.id];
+      } else {
+        body.role = [userRole.id];
+      }
     }
 
     // Validation avec Yup

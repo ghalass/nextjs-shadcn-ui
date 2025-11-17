@@ -108,7 +108,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-blue-50/30">
+    <div className="min-h-screen">
       <div className="container mx-auto px-6 py-8">
         {/* En-tête */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
@@ -119,12 +119,10 @@ export default function HomePage() {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold ">
                 {getGreeting()}, {user?.name?.split(" ")[0] || "Utilisateur"} 👋
               </h1>
-              <p className="text-gray-600 mt-1">
-                Bienvenue sur votre tableau de bord
-              </p>
+              <p className="mt-1">Bienvenue sur votre tableau de bord</p>
               <p className="text-sm text-gray-500">
                 {currentTime.toLocaleDateString("fr-FR", {
                   weekday: "long",

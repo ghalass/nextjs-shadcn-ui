@@ -46,7 +46,7 @@ model Permission {
   resource        Resource         @relation(fields: [resourceId], references: [id], onDelete: Cascade)
   rolePermissions RolePermission[]
 
-  @@map("permissions")
+  @@map("permission")
 }
 
 model UserRole {
@@ -58,7 +58,7 @@ model UserRole {
   createdAt DateTime @default(now())
 
   @@unique([userId, roleId])
-  @@map("role_user")
+  @@map("user_role")
 }
 
 model RolePermission {
@@ -70,7 +70,7 @@ model RolePermission {
   createdAt    DateTime   @default(now())
 
   @@unique([roleId, permissionId])
-  @@map("permission_role")
+  @@map("role_permission")
 }
 
 model Site {
@@ -80,7 +80,12 @@ model Site {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("site")
+  // Relations
+  engins     Engin[]
+  saisiehrms Saisiehrm[]
+  objectifs  Objectif[]
+
+  @@map("sites")
 }
 
 model Resource {
@@ -93,5 +98,206 @@ model Resource {
   // Relations
   permissions Permission[]
 
-  @@map("resources")
+  @@map("resource")
+}
+
+model Typeparc {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // Relations
+  parcs Parc[]
+
+  @@map("typeparc")
+}
+
+model Parc {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  typeparcId Int
+  typeparc   Typeparc @relation(fields: [typeparcId], references: [id], onDelete: Restrict)
+
+  // Relations
+  engins               Engin[]
+  typesConsommationLub TypeconsommationlubParc[]
+  typepanneParc        TypepanneParc[]
+  lubrifiantParc       LubrifiantParc[]
+  objectifs            Objectif[]
+
+  @@map("parc")
+}
+
+model Typeconsommationlub {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // Relations
+  parcs             TypeconsommationlubParc[]
+  saisielubrifiants Saisielubrifiant[]
+
+  @@map("typeconsommationlub")
+}
+
+model TypeconsommationlubParc {
+  parcId                Int
+  typeconsommationlubId Int
+  parc                  Parc                @relation(fields: [parcId], references: [id], onDelete: Restrict)
+  typeconsommationlub   Typeconsommationlub @relation(fields: [typeconsommationlubId], references: [id], onDelete: Restrict)
+
+  @@id([parcId, typeconsommationlubId])
+  @@map("typeconsommationlub_parc")
+}
+
+model Lubrifiant {
+  id               Int            @id @default(autoincrement())
+  name             String         @unique
+  typelubrifiantId Int
+  typelubrifiant   Typelubrifiant @relation(fields: [typelubrifiantId], references: [id], onDelete: Restrict)
+
+  // Relations
+  saisielubrifiants Saisielubrifiant[]
+  lubrifiantParcs   LubrifiantParc[]
+
+  @@map("lubrifiant")
+}
+
+model LubrifiantParc {
+  parcId       Int
+  lubrifiantId Int
+  parc         Parc       @relation(fields: [parcId], references: [id], onDelete: Restrict)
+  lubrifiant   Lubrifiant @relation(fields: [lubrifiantId], references: [id], onDelete: Restrict)
+
+  @@id([parcId, lubrifiantId])
+  @@map("lubrifiant_parc")
+}
+
+model Engin {
+  id                  Int     @id @default(autoincrement())
+  name                String  @unique
+  active              Boolean @default(true)
+  parcId              Int
+  siteId              String
+  initialHeureChassis Float?  @default(0)
+
+  // Relations
+  parc       Parc        @relation(fields: [parcId], references: [id], onDelete: Restrict)
+  site       Site        @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  saisiehrms Saisiehrm[]
+  saisiehim  Saisiehim[]
+
+  @@map("engin")
+}
+
+model Typepanne {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // Relations
+  pannes        Panne[]
+  typepanneParc TypepanneParc[]
+
+  @@map("typepanne")
+}
+
+model TypepanneParc {
+  parcId      Int
+  typepanneId Int
+  parc        Parc      @relation(fields: [parcId], references: [id], onDelete: Restrict)
+  typepanne   Typepanne @relation(fields: [typepanneId], references: [id], onDelete: Restrict)
+
+  @@id([parcId, typepanneId])
+  @@map("typepanne_parc")
+}
+
+model Panne {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  typepanneId Int
+  typepanne   Typepanne @relation(fields: [typepanneId], references: [id], onDelete: Restrict)
+
+  // Relations
+  saisiehim Saisiehim[]
+
+  @@map("panne")
+}
+
+model Saisiehrm {
+  id      Int      @id @default(autoincrement())
+  du      DateTime
+  enginId Int
+  siteId  String
+  hrm     Float
+
+  // Relations
+  engin     Engin       @relation(fields: [enginId], references: [id], onDelete: Restrict)
+  site      Site        @relation(fields: [siteId], references: [id], onDelete: Restrict)
+  saisiehim Saisiehim[]
+
+  @@unique([du, enginId])
+  @@map("saisiehrm")
+}
+
+model Saisiehim {
+  id          Int     @id @default(autoincrement())
+  panneId     Int
+  him         Float
+  ni          Int
+  saisiehrmId Int
+  enginId     Int?
+  obs         String?
+
+  // Relations
+  panne             Panne              @relation(fields: [panneId], references: [id], onDelete: Restrict)
+  saisiehrm         Saisiehrm          @relation(fields: [saisiehrmId], references: [id], onDelete: Restrict)
+  engin             Engin?             @relation(fields: [enginId], references: [id], onDelete: Restrict)
+  saisielubrifiants Saisielubrifiant[]
+
+  @@unique([panneId, saisiehrmId])
+  @@map("saisiehim")
+}
+
+model Typelubrifiant {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  // Relations
+  lubrifiants Lubrifiant[]
+
+  @@map("typelubrifiant")
+}
+
+model Saisielubrifiant {
+  id                    Int     @id @default(autoincrement())
+  lubrifiantId          Int
+  qte                   Float
+  obs                   String?
+  saisiehimId           Int
+  typeconsommationlubId Int?
+
+  // Relations
+  lubrifiant          Lubrifiant           @relation(fields: [lubrifiantId], references: [id], onDelete: Restrict)
+  saisiehim           Saisiehim            @relation(fields: [saisiehimId], references: [id], onDelete: Restrict)
+  typeconsommationlub Typeconsommationlub? @relation(fields: [typeconsommationlubId], references: [id], onDelete: Restrict)
+
+  @@map("saisielubrifiant")
+}
+
+model Objectif {
+  id          Int    @id @default(autoincrement())
+  annee       Int
+  parcId      Int
+  siteId      String
+  dispo       Float?
+  mtbf        Float?
+  tdm         Float?
+  spe_huile   Float?
+  spe_go      Float?
+  spe_graisse Float?
+
+  // Relations
+  parc Parc @relation(fields: [parcId], references: [id], onDelete: Restrict)
+  site Site @relation(fields: [siteId], references: [id], onDelete: Restrict)
+
+  @@unique([annee, parcId, siteId])
+  @@map("objectif")
 }
