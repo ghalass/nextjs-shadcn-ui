@@ -684,7 +684,7 @@ export default function RolesPage() {
               disabled={currentPage === 1}
               className="flex items-center gap-1"
             >
-              <ChevronUp className="h-4 w-4 rotate-90" />
+              <ChevronDown className="h-4 w-4 rotate-90" />
               Précédent
             </Button>
 
@@ -725,7 +725,7 @@ export default function RolesPage() {
               className="flex items-center gap-1"
             >
               Suivant
-              <ChevronDown className="h-4 w-4 rotate-90" />
+              <ChevronUp className="h-4 w-4 rotate-90" />
             </Button>
           </div>
         </div>
