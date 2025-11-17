@@ -14,7 +14,7 @@ export type User = {
   password?: string;
   roles?: UserRole[];
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 };
 
 export type userCreateDto = {

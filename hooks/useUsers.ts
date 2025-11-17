@@ -7,6 +7,8 @@ import toast from "react-hot-toast";
 
 // Interface User cohérente avec votre schéma
 export interface User {
+  createdAt: string | number | Date;
+  roles: any;
   id: string;
   email: string;
   name: string;
