@@ -2,9 +2,23 @@
 "use client";
 
 import { API } from "@/lib/constantes";
-import { User, userCreateDto } from "@/lib/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+
+// Interface User cohérente avec votre schéma
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  // Ajoutez d'autres champs si nécessaire
+}
+
+export interface userCreateDto {
+  email: string;
+  name: string;
+  password: string;
+  role: string;
+}
 
 // =======================================================
 // ✅ HOOK PRINCIPAL
@@ -17,11 +31,10 @@ export function useUsers() {
     queryKey: ["users"],
     queryFn: async (): Promise<User[]> => {
       const response = await fetch(`${API}/users`);
-      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || "Erreur lors du chargement des users");
+        throw new Error("Erreur lors du chargement des utilisateurs");
       }
-      return data;
+      return response.json();
     },
   });
 
@@ -34,13 +47,13 @@ export function useUsers() {
         body: JSON.stringify({ email, name, password, role }),
       });
 
-      const res = await response.json();
       if (!response.ok) {
+        const error = await response.json();
         throw new Error(
-          res.message || "Erreur lors de la création d'un utilisateur"
+          error.message || "Erreur lors de la création d'un utilisateur"
         );
       }
-      return res;
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -65,16 +78,17 @@ export function useUsers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name, password, role }),
       });
-      const res = await response.json();
+
       if (!response.ok) {
+        const error = await response.json();
         throw new Error(
-          res.message || "Erreur lors de la modification d'un utilisateur"
+          error.message || "Erreur lors de la modification d'un utilisateur"
         );
       }
 
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success("Utilisateur modifié !");
-      return res;
+      return response.json();
     },
     onError: (error: any) => {
       // Ne pas afficher de toast si c'est une erreur de validation
@@ -88,16 +102,17 @@ export function useUsers() {
   const deleteUser = useMutation<User, Error, { id: string }>({
     mutationFn: async ({ id }) => {
       const response = await fetch(`${API}/users/${id}`, { method: "DELETE" });
-      const res = await response.json();
+
       if (!response.ok) {
+        const error = await response.json();
         throw new Error(
-          res.message || "Erreur lors de la suppression d'un utilisateur"
+          error.message || "Erreur lors de la suppression d'un utilisateur"
         );
       }
 
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success("Utilisateur supprimé !");
-      return res;
+      return response.json();
     },
     onError: (error) => {
       toast.error(error.message);

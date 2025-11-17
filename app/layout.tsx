@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Roboto, Cairo } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import Providers from "./providers";
+import Providers from "../providers/providers";
 
 const roboto = Roboto({
   subsets: ["latin"],

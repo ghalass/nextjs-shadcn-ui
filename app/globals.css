@@ -121,3 +121,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+/* Styles pour le scroll personnalisé */
+.scroll-area-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scroll-area-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-area-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 2px;
+}
+
+.scroll-area-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
