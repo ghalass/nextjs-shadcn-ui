@@ -34,7 +34,7 @@ export async function GET() {
 
     const { password, ...userWithoutPassword } = user || {};
 
-    return NextResponse.json({ user: userWithoutPassword });
+    return NextResponse.json(userWithoutPassword);
   } catch (error) {
     console.error(
       "Erreur lors de récupération de l'utilisateur conncté:",

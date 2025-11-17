@@ -10,16 +10,13 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  name         String
-  password     String
-  roles        UserRole[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  participants Participant[]
-  messages     Message[]
-  messageReads MessageRead[]
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  password  String
+  roles     UserRole[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   @@map("user")
 }
@@ -97,70 +94,4 @@ model Resource {
   permissions Permission[]
 
   @@map("resources")
-}
-
-model Conversation {
-  id        String   @id @default(cuid())
-  title     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  participants Participant[]
-  messages     Message[]
-
-  @@map("conversation")
-}
-
-model Participant {
-  id             String   @id @default(cuid())
-  userId         String
-  conversationId String
-  role           String   @default("member") // member, admin
-  joinedAt       DateTime @default(now())
-
-  // Relations
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, conversationId])
-  @@map("participant")
-}
-
-model Message {
-  id             String        @id @default(cuid())
-  content        String
-  type           MessageType   @default(TEXT)
-  conversationId String
-  senderId       String
-  readBy         MessageRead[]
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  // Relations
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
-
-  @@map("message")
-}
-
-model MessageRead {
-  id        String   @id @default(cuid())
-  messageId String
-  userId    String
-  readAt    DateTime @default(now())
-
-  // Relations
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([messageId, userId])
-  @@map("message_read")
-}
-
-enum MessageType {
-  TEXT
-  IMAGE
-  FILE
-  SYSTEM
 }

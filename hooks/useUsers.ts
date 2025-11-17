@@ -121,10 +121,80 @@ export function useUsers() {
     },
   });
 
+  const updateProfile = useMutation<
+    User,
+    Error,
+    {
+      name: string;
+      email: string;
+      password?: string;
+    }
+  >({
+    mutationFn: async ({ name, email, password }) => {
+      const response = await fetch(`${API}/auth/profile`, {
+        // Endpoint profil
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.message || "Erreur lors de la mise à jour du profil"
+        );
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+      toast.success("Profil mis à jour !");
+      return response.json();
+    },
+    onError: (error: any) => {
+      if (error.status !== 400 && error.status !== 409) {
+        toast.error(error.message);
+      }
+    },
+  });
+
+  const changePassword = useMutation<
+    User,
+    Error,
+    {
+      currentPassword: string;
+      newPassword: string;
+    }
+  >({
+    mutationFn: async ({ currentPassword, newPassword }) => {
+      const response = await fetch(`${API}/auth/profile`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          password: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(
+          error.message || "Erreur lors du changement de mot de passe"
+        );
+      }
+
+      toast.success("Mot de passe modifié avec succès !");
+      return response.json();
+    },
+    onError: (error: any) => {
+      toast.error(error.message);
+    },
+  });
+
   return {
     usersQuery,
     createUser,
     updateUser,
     deleteUser,
+    updateProfile,
+    changePassword,
   };
 }
