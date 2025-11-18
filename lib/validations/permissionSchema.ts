@@ -1,6 +1,5 @@
 // lib/validations/permissionSchema.ts
-import * as Yup from "yup";
-
+import Yup from "@/lib/yupFr";
 export interface PermissionFormData {
   name: string;
   resourceId: string;

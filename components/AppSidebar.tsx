@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Users,
   MapPin,
+  Truck,
   Shield,
   FileText,
   ShieldUser,
@@ -49,6 +50,24 @@ const mainItems = [
 ];
 
 const configItems = [
+  {
+    title: "Engin",
+    url: "/engins",
+    icon: Truck,
+    description: "Gérer les engins",
+  },
+  {
+    title: "Parc",
+    url: "/parcs",
+    icon: Truck,
+    description: "Gérer les parcs",
+  },
+  {
+    title: "Type de parc",
+    url: "/typeparcs",
+    icon: Truck,
+    description: "Gérer les type des parcs",
+  },
   {
     title: "Sites",
     url: "/sites",

@@ -126,3 +126,60 @@ export type Site = {
   name: string;
   active: boolean;
 };
+
+export interface Typeparc {
+  id: string;
+  name: string;
+  parcs?: Parc[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Parc {
+  id: string;
+  name: string;
+  typeparcId: string;
+  typeparc: Typeparc;
+  engins: Engin[];
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    engins: number;
+  };
+}
+
+export interface Typeparc {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Engin {
+  id: string;
+  name: string;
+  active: boolean;
+  parcId: string;
+  siteId: string;
+  initialHeureChassis?: number;
+  parc: Parc;
+  site: Site;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    pannes: number;
+    saisiehrms: number;
+    saisiehim: number;
+  };
+}
+
+export interface Parc {
+  id: string;
+  name: string;
+  typeparc: Typeparc;
+}
+
+export interface Typeparc {
+  id: string;
+  name: string;
+}

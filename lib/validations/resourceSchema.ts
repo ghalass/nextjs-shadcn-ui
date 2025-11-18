@@ -1,5 +1,5 @@
 // lib/validations/resourceSchema.ts
-import * as Yup from "yup";
+import Yup from "@/lib/yupFr";
 
 export interface ResourceFormData {
   name: string;

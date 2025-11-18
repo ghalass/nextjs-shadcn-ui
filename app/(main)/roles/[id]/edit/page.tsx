@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useFormik } from "formik";
-import * as Yup from "yup";
+import yup from "@/lib/yupFr";
 import {
   usePermissions,
   type PermissionWithResource,

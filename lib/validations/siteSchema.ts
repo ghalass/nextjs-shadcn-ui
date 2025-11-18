@@ -1,5 +1,5 @@
 // lib/validation/siteSchema.ts
-import * as Yup from "@/lib/yupFr";
+import Yup from "@/lib/yupFr";
 
 export const siteSchema = Yup.object({
   name: Yup.string()
