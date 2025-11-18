@@ -12,6 +12,10 @@ import {
   FileText,
   ShieldUser,
   LockKeyhole,
+  Wrench,
+  ListOrdered,
+  Tractor,
+  Car,
 } from "lucide-react";
 
 import {
@@ -59,14 +63,27 @@ const configItems = [
   {
     title: "Parc",
     url: "/parcs",
-    icon: Truck,
+    icon: Car,
     description: "Gérer les parcs",
   },
+
   {
     title: "Type de parc",
     url: "/typeparcs",
-    icon: Truck,
+    icon: Tractor,
     description: "Gérer les type des parcs",
+  },
+  {
+    title: "Panne",
+    url: "/pannes",
+    icon: Wrench,
+    description: "Gérer les pannes",
+  },
+  {
+    title: "Type de panne",
+    url: "/typepannes",
+    icon: ListOrdered,
+    description: "Gérer les type des pannes",
   },
   {
     title: "Sites",

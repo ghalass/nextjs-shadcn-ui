@@ -538,13 +538,14 @@ updatedAt DateTime? @updatedAt
 }
 
 ##################
-me faire la page EnginsPage qui gère les Engin
+me faire la page TypepannesPage qui gère les Typepanne
 avec fonctionnalités ci-dessous :
 
 - utilise shadcn/ui avec thème adapté au mode "dark/light" uniquement
 - utilise TanStack table
 - utilise TanStack query (pour les query et mutations vers la API)
-- utilise yup (utilise mon utilitaire placé dans => lib/yupFr.ts) et formik
+- utilise Yup, importe le à partir de "lib/yupFr.ts"
+- utilise formik
 - crée un fichier hook pour la gestion des requettes (dans le dossier hooks)
 - Ui/UX amélioré
 - recherche globale et recherche par colonne

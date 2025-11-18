@@ -120,13 +120,16 @@ export type RolePermission = {
   createdAt: Date;
 };
 
-// Types divers
+// Types Site
 export type Site = {
   id: string;
   name: string;
   active: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
+// Types Parc et Engins
 export interface Typeparc {
   id: string;
   name: string;
@@ -148,13 +151,6 @@ export interface Parc {
   };
 }
 
-export interface Typeparc {
-  id: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Engin {
   id: string;
   name: string;
@@ -173,13 +169,418 @@ export interface Engin {
   };
 }
 
-export interface Parc {
+// TYPES POUR LA GESTION DES PANNES
+
+export interface TypePanne {
   id: string;
   name: string;
-  typeparc: Typeparc;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface Typeparc {
+export interface OriginePanne {
   id: string;
   name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NiveauUrgence {
+  id: string;
+  name: string;
+  description?: string;
+  level: number;
+  color?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StatutIntervention {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Panne {
+  id: string;
+  code?: string;
+  description: string;
+  dateApparition: string;
+  dateExecution?: string;
+  dateCloture?: string;
+  observations?: string;
+  tempsArret?: number;
+  coutEstime?: number;
+  typepanneId: string;
+  originePanneId: string;
+  niveauUrgenceId: string;
+  enginId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  typepanne?: TypePanne;
+  originePanne?: OriginePanne;
+  niveauUrgence?: NiveauUrgence;
+  engin?: Engin;
+  interventions?: Intervention[];
+  piecesDemandees?: PieceDemandee[];
+  saisiehim?: Saisiehim[];
+}
+
+export interface PanneCreateDto {
+  description: string;
+  dateApparition: string;
+  dateExecution?: string;
+  dateCloture?: string;
+  observations?: string;
+  tempsArret?: number;
+  coutEstime?: number;
+  typepanneId: string;
+  originePanneId: string;
+  niveauUrgenceId: string;
+  enginId: string;
+}
+
+export interface PanneUpdateDto {
+  id: string;
+  description?: string;
+  dateApparition?: string;
+  dateExecution?: string;
+  dateCloture?: string;
+  observations?: string;
+  tempsArret?: number;
+  coutEstime?: number;
+  typepanneId?: string;
+  originePanneId?: string;
+  niveauUrgenceId?: string;
+  enginId?: string;
+}
+
+// TYPES POUR LES INTERVENTIONS
+
+export interface Intervention {
+  id: string;
+  dateDebut: string;
+  dateFin?: string;
+  descriptionTravaux: string;
+  tempsPasse?: number;
+  observations?: string;
+  panneId: string;
+  technicienId: string;
+  siteId: string;
+  statutInterventionId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  panne?: Panne;
+  technicien?: User;
+  site?: Site;
+  statutIntervention?: StatutIntervention;
+  piecesUtilisees?: PieceUtilisee[];
+}
+
+export interface InterventionCreateDto {
+  dateDebut: string;
+  dateFin?: string;
+  descriptionTravaux: string;
+  tempsPasse?: number;
+  observations?: string;
+  panneId: string;
+  technicienId: string;
+  siteId: string;
+  statutInterventionId: string;
+}
+
+export interface InterventionUpdateDto {
+  id: string;
+  dateDebut?: string;
+  dateFin?: string;
+  descriptionTravaux?: string;
+  tempsPasse?: number;
+  observations?: string;
+  technicienId?: string;
+  siteId?: string;
+  statutInterventionId?: string;
+}
+
+// TYPES POUR LES PIÈCES DE RECHANGE
+
+export interface CategoriePiece {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  pieces?: Piece[];
+}
+
+export interface Piece {
+  id: string;
+  reference: string;
+  designation: string;
+  prixUnitaire?: number;
+  stockActuel: number;
+  stockMinimum: number;
+  fournisseur?: string;
+  categoriePieceId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  categoriePiece?: CategoriePiece;
+  piecesDemandees?: PieceDemandee[];
+  piecesUtilisees?: PieceUtilisee[];
+}
+
+export interface PieceCreateDto {
+  reference: string;
+  designation: string;
+  prixUnitaire?: number;
+  stockActuel?: number;
+  stockMinimum?: number;
+  fournisseur?: string;
+  categoriePieceId: string;
+}
+
+export interface PieceUpdateDto {
+  id: string;
+  reference?: string;
+  designation?: string;
+  prixUnitaire?: number;
+  stockActuel?: number;
+  stockMinimum?: number;
+  fournisseur?: string;
+  categoriePieceId?: string;
+}
+
+export interface PieceDemandee {
+  id: string;
+  quantite: number;
+  prix?: number;
+  observations?: string;
+  panneId: string;
+  pieceId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  panne?: Panne;
+  piece?: Piece;
+}
+
+export interface PieceDemandeeCreateDto {
+  quantite: number;
+  prix?: number;
+  observations?: string;
+  panneId: string;
+  pieceId: string;
+}
+
+export interface PieceUtilisee {
+  id: string;
+  quantite: number;
+  prix?: number;
+  interventionId: string;
+  pieceId: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  intervention?: Intervention;
+  piece?: Piece;
+}
+
+export interface PieceUtiliseeCreateDto {
+  quantite: number;
+  prix?: number;
+  interventionId: string;
+  pieceId: string;
+}
+
+// TYPES POUR LES SAISIES (EXISTANTS)
+
+export interface Saisiehrm {
+  id: string;
+  du: string;
+  enginId: string;
+  siteId: string;
+  hrm: number;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  engin?: Engin;
+  site?: Site;
+  saisiehim?: Saisiehim[];
+}
+
+export interface Saisiehim {
+  id: string;
+  panneId: string;
+  him: number;
+  ni: number;
+  saisiehrmId: string;
+  enginId?: string;
+  obs?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  panne?: Panne;
+  saisiehrm?: Saisiehrm;
+  engin?: Engin;
+  saisielubrifiants?: Saisielubrifiant[];
+}
+
+export interface Typelubrifiant {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  lubrifiants?: Lubrifiant[];
+}
+
+export interface Lubrifiant {
+  id: string;
+  name: string;
+  typelubrifiantId: string;
+  typelubrifiant?: Typelubrifiant;
+  createdAt: string;
+  updatedAt: string;
+  saisielubrifiants?: Saisielubrifiant[];
+  lubrifiantParcs?: LubrifiantParc[];
+}
+
+export interface Typeconsommationlub {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  parcs?: TypeconsommationlubParc[];
+  saisielubrifiants?: Saisielubrifiant[];
+}
+
+export interface Saisielubrifiant {
+  id: string;
+  lubrifiantId: string;
+  qte: number;
+  obs?: string;
+  saisiehimId: string;
+  typeconsommationlubId?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  lubrifiant?: Lubrifiant;
+  saisiehim?: Saisiehim;
+  typeconsommationlub?: Typeconsommationlub;
+}
+
+// TYPES POUR LES RELATIONS MANY-TO-MANY
+
+export interface TypepanneParc {
+  parcId: string;
+  typepanneId: string;
+  parc?: Parc;
+  typepanne?: TypePanne;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TypeconsommationlubParc {
+  parcId: string;
+  typeconsommationlubId: string;
+  parc?: Parc;
+  typeconsommationlub?: Typeconsommationlub;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LubrifiantParc {
+  parcId: string;
+  lubrifiantId: string;
+  parc?: Parc;
+  lubrifiant?: Lubrifiant;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// TYPES POUR LES OBJECTIFS
+
+export interface Objectif {
+  id: string;
+  annee: number;
+  parcId: string;
+  siteId: string;
+  dispo?: number;
+  mtbf?: number;
+  tdm?: number;
+  spe_huile?: number;
+  spe_go?: number;
+  spe_graisse?: number;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  parc?: Parc;
+  site?: Site;
+}
+
+// TYPES POUR LES FILTRES ET PAGINATION
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface PanneFilterParams extends PaginationParams {
+  search?: string;
+  enginId?: string;
+  typepanneId?: string;
+  niveauUrgenceId?: string;
+  siteId?: string;
+  dateDebut?: string;
+  dateFin?: string;
+  statut?: "en-attente" | "en-cours" | "resolue";
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+}
+
+// TYPES POUR LES STATISTIQUES
+
+export interface PanneStats {
+  total: number;
+  enAttente: number;
+  enCours: number;
+  resolues: number;
+  parType: { type: string; count: number }[];
+  parUrgence: { urgence: string; count: number }[];
+  parSite: { site: string; count: number }[];
+  tempsMoyenReparation: number;
+  coutTotal: number;
+}
+
+export interface EnginStats {
+  id: string;
+  name: string;
+  site: string;
+  totalPannes: number;
+  tempsArretTotal: number;
+  dernierIncident?: string;
+  statut: "actif" | "en-panne" | "maintenance";
 }
