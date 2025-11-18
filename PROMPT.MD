@@ -538,7 +538,7 @@ updatedAt DateTime? @updatedAt
 }
 
 ##################
-me faire la page TypepannesPage qui gère les Typepanne
+me faire la page Origine_pannesPage qui gère l'Origine des pannes
 avec fonctionnalités ci-dessous :
 
 - utilise shadcn/ui avec thème adapté au mode "dark/light" uniquement

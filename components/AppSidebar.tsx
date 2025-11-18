@@ -86,6 +86,12 @@ const configItems = [
     description: "Gérer les type des pannes",
   },
   {
+    title: "Origies des pannes",
+    url: "/origine_pannes",
+    icon: ListOrdered,
+    description: "Gérer les origines des pannes",
+  },
+  {
     title: "Sites",
     url: "/sites",
     icon: MapPin,
@@ -186,7 +192,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
 
-                  <CollapsibleContent className="CollapsibleContent">
+                  <CollapsibleContent>
                     <SidebarMenuSub className="mt-1">
                       <SidebarMenuSubItem>
                         {configItems.map((item) => {
@@ -197,7 +203,7 @@ export function AppSidebar() {
                               asChild
                               isActive={isActive}
                               className={cn(
-                                "pl-8 transition-all duration-200 hover:bg-accent",
+                                "pl-4 transition-all duration-200 hover:bg-accent",
                                 isActive &&
                                   "bg-accent text-accent-foreground font-medium"
                               )}
@@ -246,7 +252,7 @@ export function AppSidebar() {
                               asChild
                               isActive={isActive}
                               className={cn(
-                                "pl-8 transition-all duration-200 hover:bg-accent",
+                                "pl-4 transition-all duration-200 hover:bg-accent",
                                 isActive &&
                                   "bg-accent text-accent-foreground font-medium"
                               )}
