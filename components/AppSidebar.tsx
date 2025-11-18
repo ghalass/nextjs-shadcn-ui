@@ -92,6 +92,12 @@ const configItems = [
     description: "Gérer les origines des pannes",
   },
   {
+    title: "Niveaux d'urgence",
+    url: "/niveau-urgences",
+    icon: ListOrdered,
+    description: "Gérer les niveaux des urgences",
+  },
+  {
     title: "Sites",
     url: "/sites",
     icon: MapPin,

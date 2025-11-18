@@ -538,7 +538,7 @@ updatedAt DateTime? @updatedAt
 }
 
 ##################
-me faire la page Origine_pannesPage qui gère l'Origine des pannes
+me faire la page Niveau_urgencesPage qui gère l'Origine des niveau_urgences
 avec fonctionnalités ci-dessous :
 
 - utilise shadcn/ui avec thème adapté au mode "dark/light" uniquement
