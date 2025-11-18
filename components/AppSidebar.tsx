@@ -55,6 +55,12 @@ const mainItems = [
 
 const configItems = [
   {
+    title: "Saisie des Performances",
+    url: "/performances",
+    icon: Truck,
+    description: "Gérer les performances des engins",
+  },
+  {
     title: "Engin",
     url: "/engins",
     icon: Truck,

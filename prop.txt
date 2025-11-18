@@ -1,0 +1,1343 @@
+je veut faire une application de suivi et traitement des pannes sur mes engins miniers repartis sur plusieurs sites miniers,
+ces anomalies parfois nécessites des pièces de rechange qui peut être disponibles ou pas.
+ces pannes ont des types (mécanique, pneumatique, hydraulique ...etc) et origines (controle journalier, entretien systématique, inspection ...etc)
+ces pannes seront traité par des techniciens
+chaque engin doit avoir un nom et un site (position géographique)
+ces pannes doivent avoir des niveaux d'urgences et date d'apparition et date d'exexution
+merci de me proposer un schema.prisma avec commentaires pour les models manquant de mon schema ci-dessus
+utilise cuid() pour les id au lieu de autoincrement()
+
+// prisma/schema.prisma
+
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+provider = "postgresql"
+url = env("DATABASE_URL")
+}
+
+model User {
+id String @id @default(cuid())
+email String @unique
+name String
+password String
+roles UserRole[]
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+
+// Relations
+interventions Intervention[]
+
+@@map("users")
+}
+
+model Role {
+id String @id @default(cuid())
+name String @unique
+description String?
+permissions RolePermission[]
+users UserRole[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("roles")
+}
+
+model Permission {
+id String @id @default(cuid())
+name String @unique
+description String?
+action String
+resourceId String
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+resource Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+rolePermissions RolePermission[]
+
+@@map("permissions")
+}
+
+model UserRole {
+id String @id @default(cuid())
+userId String
+roleId String
+user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([userId, roleId])
+@@map("user_roles")
+}
+
+model RolePermission {
+id String @id @default(cuid())
+roleId String
+permissionId String
+role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([roleId, permissionId])
+@@map("role_permissions")
+}
+
+model Site {
+id String @id @default(cuid())
+name String @unique
+active Boolean @default(true)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+engins Engin[]
+saisiehrms Saisiehrm[]
+objectifs Objectif[]
+interventions Intervention[]
+
+@@map("sites")
+}
+
+model Resource {
+id String @id @default(cuid())
+name String @unique
+label String
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+permissions Permission[]
+
+@@map("resources")
+}
+
+// MODÈLES POUR LA GESTION DES PANNES ET INTERVENTIONS
+
+model Typepanne {
+id String @id @default(cuid())
+name String @unique
+description String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+pannes Panne[]
+typepanneParc TypepanneParc[]
+
+@@map("typepannes")
+}
+
+model OriginePanne {
+id String @id @default(cuid())
+name String @unique
+description String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+pannes Panne[]
+
+@@map("origine_pannes")
+}
+
+model NiveauUrgence {
+id String @id @default(cuid())
+name String @unique
+description String?
+level Int // 1: Basse, 2: Moyenne, 3: Haute, 4: Critique
+color String? // Couleur pour l'UI (ex: "#FF0000" pour rouge)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+pannes Panne[]
+
+@@map("niveau_urgences")
+}
+
+model StatutIntervention {
+id String @id @default(cuid())
+name String @unique
+description String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+interventions Intervention[]
+
+@@map("statut_interventions")
+}
+
+model Panne {
+id String @id @default(cuid())
+code String? @unique // Code unique pour référence
+description String
+dateApparition DateTime // Date de détection de la panne
+dateExecution DateTime? // Date prévue pour l'intervention
+dateCloture DateTime? // Date de résolution effective
+observations String?
+tempsArret Float? // Temps d'arrêt en heures
+coutEstime Float? // Coût estimé de la réparation
+
+// Relations
+typepanneId String
+originePanneId String
+niveauUrgenceId String
+enginId String
+interventions Intervention[]
+piecesDemandees PieceDemandee[]
+
+typepanne Typepanne @relation(fields: [typepanneId], references: [id], onDelete: Restrict)
+originePanne OriginePanne @relation(fields: [originePanneId], references: [id], onDelete: Restrict)
+niveauUrgence NiveauUrgence @relation(fields: [niveauUrgenceId], references: [id], onDelete: Restrict)
+engin Engin @relation(fields: [enginId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime @updatedAt
+saisiehims Saisiehim[]
+
+@@map("pannes")
+}
+
+model Intervention {
+id String @id @default(cuid())
+dateDebut DateTime // Date de début de l'intervention
+dateFin DateTime? // Date de fin effective
+descriptionTravaux String // Description détaillée des travaux
+tempsPasse Float? // Temps passé en heures
+observations String?
+
+// Relations
+panneId String
+technicienId String // Utilisateur qui effectue l'intervention
+siteId String
+statutInterventionId String
+piecesUtilisees PieceUtilisee[]
+
+panne Panne @relation(fields: [panneId], references: [id], onDelete: Cascade)
+technicien User @relation(fields: [technicienId], references: [id], onDelete: Restrict)
+site Site @relation(fields: [siteId], references: [id], onDelete: Restrict)
+statutIntervention StatutIntervention @relation(fields: [statutInterventionId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("interventions")
+}
+
+// GESTION DES PIÈCES DE RECHANGE
+
+model CategoriePiece {
+id String @id @default(cuid())
+name String @unique
+description String?
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+pieces Piece[]
+
+@@map("categorie_pieces")
+}
+
+model Piece {
+id String @id @default(cuid())
+reference String @unique // Référence unique de la pièce
+designation String
+prixUnitaire Float?
+stockActuel Int @default(0)
+stockMinimum Int @default(5)
+fournisseur String?
+
+// Relations
+categoriePieceId String
+piecesDemandees PieceDemandee[]
+piecesUtilisees PieceUtilisee[]
+
+categoriePiece CategoriePiece @relation(fields: [categoriePieceId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("pieces")
+}
+
+model PieceDemandee {
+id String @id @default(cuid())
+quantite Int
+prix Float? // Prix au moment de la demande
+observations String?
+
+// Relations
+panneId String
+pieceId String
+
+panne Panne @relation(fields: [panneId], references: [id], onDelete: Cascade)
+piece Piece @relation(fields: [pieceId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([panneId, pieceId])
+@@map("pieces_demandees")
+}
+
+model PieceUtilisee {
+id String @id @default(cuid())
+quantite Int
+prix Float? // Prix effectif au moment de l'utilisation
+
+// Relations
+interventionId String
+pieceId String
+
+intervention Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+piece Piece @relation(fields: [pieceId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([interventionId, pieceId])
+@@map("pieces_utilisees")
+}
+
+// MODÈLES EXISTANTS (MIS À JOUR AVEC CUID)
+
+model Typeparc {
+id String @id @default(cuid())
+name String @unique
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+// Relations
+parcs Parc[]
+
+@@map("typeparcs")
+}
+
+model Parc {
+id String @id @default(cuid())
+name String @unique
+typeparcId String
+typeparc Typeparc @relation(fields: [typeparcId], references: [id], onDelete: Restrict)
+
+// Relations
+engins Engin[]
+typesConsommationLub TypeconsommationlubParc[]
+typepanneParc TypepanneParc[]
+lubrifiantParc LubrifiantParc[]
+objectifs Objectif[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("parcs")
+}
+
+model Typeconsommationlub {
+id String @id @default(cuid())
+name String @unique
+
+// Relations
+parcs TypeconsommationlubParc[]
+saisielubrifiants Saisielubrifiant[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("typeconsommationlubs")
+}
+
+model TypeconsommationlubParc {
+parcId String
+typeconsommationlubId String
+parc Parc @relation(fields: [parcId], references: [id], onDelete: Restrict)
+typeconsommationlub Typeconsommationlub @relation(fields: [typeconsommationlubId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@id([parcId, typeconsommationlubId])
+@@map("typeconsommationlub_parc")
+}
+
+model Lubrifiant {
+id String @id @default(cuid())
+name String @unique
+typelubrifiantId String
+typelubrifiant Typelubrifiant @relation(fields: [typelubrifiantId], references: [id], onDelete: Restrict)
+
+// Relations
+saisielubrifiants Saisielubrifiant[]
+lubrifiantParcs LubrifiantParc[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("lubrifiants")
+}
+
+model LubrifiantParc {
+parcId String
+lubrifiantId String
+parc Parc @relation(fields: [parcId], references: [id], onDelete: Restrict)
+lubrifiant Lubrifiant @relation(fields: [lubrifiantId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@id([parcId, lubrifiantId])
+@@map("lubrifiant_parc")
+}
+
+model Engin {
+id String @id @default(cuid())
+name String @unique
+active Boolean @default(true)
+parcId String
+siteId String
+initialHeureChassis Float? @default(0)
+
+// Relations
+parc Parc @relation(fields: [parcId], references: [id], onDelete: Restrict)
+site Site @relation(fields: [siteId], references: [id], onDelete: Restrict)
+saisiehrms Saisiehrm[]
+saisiehim Saisiehim[]
+pannes Panne[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("engins")
+}
+
+model TypepanneParc {
+parcId String
+typepanneId String
+parc Parc @relation(fields: [parcId], references: [id], onDelete: Restrict)
+typepanne Typepanne @relation(fields: [typepanneId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@id([parcId, typepanneId])
+@@map("typepanne_parc")
+}
+
+model Saisiehrm {
+id String @id @default(cuid())
+du DateTime
+enginId String
+siteId String
+hrm Float
+
+// Relations
+engin Engin @relation(fields: [enginId], references: [id], onDelete: Restrict)
+site Site @relation(fields: [siteId], references: [id], onDelete: Restrict)
+saisiehim Saisiehim[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([du, enginId])
+@@map("saisiehrms")
+}
+
+model Saisiehim {
+id String @id @default(cuid())
+panneId String
+him Float
+ni Int
+saisiehrmId String
+enginId String?
+obs String?
+
+// Relations
+panne Panne @relation(fields: [panneId], references: [id], onDelete: Restrict)
+saisiehrm Saisiehrm @relation(fields: [saisiehrmId], references: [id], onDelete: Restrict)
+engin Engin? @relation(fields: [enginId], references: [id], onDelete: Restrict)
+saisielubrifiants Saisielubrifiant[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([panneId, saisiehrmId])
+@@map("saisiehims")
+}
+
+model Typelubrifiant {
+id String @id @default(cuid())
+name String @unique
+
+// Relations
+lubrifiants Lubrifiant[]
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("typelubrifiants")
+}
+
+model Saisielubrifiant {
+id String @id @default(cuid())
+lubrifiantId String
+qte Float
+obs String?
+saisiehimId String
+typeconsommationlubId String?
+
+// Relations
+lubrifiant Lubrifiant @relation(fields: [lubrifiantId], references: [id], onDelete: Restrict)
+saisiehim Saisiehim @relation(fields: [saisiehimId], references: [id], onDelete: Restrict)
+typeconsommationlub Typeconsommationlub? @relation(fields: [typeconsommationlubId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@map("saisielubrifiants")
+}
+
+model Objectif {
+id String @id @default(cuid())
+annee Int
+parcId String
+siteId String
+dispo Float?
+mtbf Float?
+tdm Float?
+spe_huile Float?
+spe_go Float?
+spe_graisse Float?
+
+// Relations
+parc Parc @relation(fields: [parcId], references: [id], onDelete: Restrict)
+site Site @relation(fields: [siteId], references: [id], onDelete: Restrict)
+
+createdAt DateTime @default(now())
+updatedAt DateTime? @updatedAt
+
+@@unique([annee, parcId, siteId])
+@@map("objectifs")
+}
+
+##################
+me faire la page SaisiePerformancesPage qui gère l'Origine des saisiehrms, saisiehims et saisielubrifiants (saisie par engin, pour chaque engin et chaque jour il sera saisie : hrm une seule fois, et saisiehim pour plusieurs pannes, et la saisie de consommation des lubrifiants, donc les étapes à respecer pour faire la faire est :
+1-Saisir hrm
+2-saisie him pas panne
+3-saisir consommation lubrifiants par him s'il existe)
+avec fonctionnalités ci-dessous :
+
+- utilise shadcn/ui avec thème adapté au mode "dark/light" uniquement
+- utilise TanStack table
+- utilise TanStack query (pour les query et mutations vers la API)
+- utilise Yup, importe le à partir de "lib/yupFr.ts"
+- utilise formik
+- crée un fichier hook pour la gestion des requettes (dans le dossier hooks)
+- Ui/UX amélioré
+- recherche globale et recherche par colonne
+- trie par colonne
+- pagination (rajoute option afficher tout à la Sélection du nombre d'éléments par page)
+- corrige tout les erreurs typage possibles
+- rajoute l'option d'exporter en EXCEL (utilise librairie xlsx)
+- crée tout les composants nécessaire (modals, ...etc)
+- crée tout les endpoints nécessaire pour CRUD
+- mon projet est nextjs
+- utilise le shcema.prisma ci-dessus
+- s'inspire de la page ci-dessous pour améliorer la proposition
+
+
+// app/(main)/engins/page.tsx
+"use client";
+
+import { useState, useMemo, useRef } from "react";
+import { useEngins } from "@/hooks/useEngins";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Loader2,
+  Plus,
+  Pencil,
+  Trash2,
+  AlertCircle,
+  Search,
+  ChevronUp,
+  ChevronDown,
+  Filter,
+  X,
+  Download,
+  Truck,
+} from "lucide-react";
+import { EnginModal } from "@/components/engins/EnginModal";
+import { DeleteEnginModal } from "@/components/engins/DeleteEnginModal";
+import { Engin } from "@/lib/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import * as XLSX from "xlsx";
+
+type SortField =
+  | "name"
+  | "parc"
+  | "site"
+  | "status"
+  | "pannesCount"
+  | "createdAt";
+type SortDirection = "asc" | "desc";
+
+interface ColumnFilters {
+  name: string;
+  parc: string;
+  site: string;
+  status: string;
+}
+
+export default function EnginsPage() {
+  const {
+    enginsQuery,
+    parcsQuery,
+    sitesQuery,
+    createEngin,
+    updateEngin,
+    deleteEngin,
+    typeparcsQuery,
+  } = useEngins();
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [selectedEngin, setSelectedEngin] = useState<Engin | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const [globalSearch, setGlobalSearch] = useState<string>("");
+  const [columnFilters, setColumnFilters] = useState<ColumnFilters>({
+    name: "",
+    parc: "",
+    site: "",
+    status: "",
+  });
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+
+  const columnFilterRefs = useRef<{
+    name: HTMLInputElement | null;
+    parc: HTMLInputElement | null;
+    site: HTMLInputElement | null;
+    status: HTMLInputElement | null;
+  }>({
+    name: null,
+    parc: null,
+    site: null,
+    status: null,
+  });
+
+  const handleCreate = (): void => {
+    setSelectedEngin(null);
+    setError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (engin: Engin): void => {
+    setSelectedEngin(engin);
+    setError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = (engin: Engin): void => {
+    setSelectedEngin(engin);
+    setError(null);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleCloseModal = (): void => {
+    setIsModalOpen(false);
+    setError(null);
+    setSelectedEngin(null);
+  };
+
+  const handleCloseDeleteModal = (): void => {
+    setIsDeleteModalOpen(false);
+    setError(null);
+    setSelectedEngin(null);
+  };
+
+  const handleSort = (field: SortField): void => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const handleColumnFilter = (
+    column: keyof ColumnFilters,
+    value: string
+  ): void => {
+    const activeElement = document.activeElement as HTMLInputElement;
+
+    setColumnFilters((prev) => ({
+      ...prev,
+      [column]: value,
+    }));
+    setCurrentPage(1);
+
+    setTimeout(() => {
+      if (activeElement && columnFilterRefs.current[column]) {
+        columnFilterRefs.current[column]?.focus();
+        if (columnFilterRefs.current[column]) {
+          const input = columnFilterRefs.current[column] as HTMLInputElement;
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+      }
+    }, 0);
+  };
+
+  const handleClearFilters = (): void => {
+    setGlobalSearch("");
+    setColumnFilters({
+      name: "",
+      parc: "",
+      site: "",
+      status: "",
+    });
+    setCurrentPage(1);
+  };
+
+  const filteredAndSortedEngins = useMemo((): Engin[] => {
+    if (!enginsQuery.data) return [];
+
+    const enginsData = enginsQuery.data as unknown as Engin[];
+    let filtered = enginsData.filter((engin: Engin) => {
+      const globalMatch =
+        globalSearch === "" ||
+        engin.name.toLowerCase().includes(globalSearch.toLowerCase()) ||
+        engin.parc.name.toLowerCase().includes(globalSearch.toLowerCase()) ||
+        engin.site.name.toLowerCase().includes(globalSearch.toLowerCase());
+
+      const nameMatch =
+        columnFilters.name === "" ||
+        engin.name.toLowerCase().includes(columnFilters.name.toLowerCase());
+
+      const parcMatch =
+        columnFilters.parc === "" ||
+        engin.parc.name
+          .toLowerCase()
+          .includes(columnFilters.parc.toLowerCase());
+
+      const siteMatch =
+        columnFilters.site === "" ||
+        engin.site.name
+          .toLowerCase()
+          .includes(columnFilters.site.toLowerCase());
+
+      const statusMatch =
+        columnFilters.status === "" ||
+        (columnFilters.status === "actif" && engin.active) ||
+        (columnFilters.status === "inactif" && !engin.active);
+
+      return Boolean(
+        globalMatch && nameMatch && parcMatch && siteMatch && statusMatch
+      );
+    });
+
+    filtered.sort((a: Engin, b: Engin) => {
+      let aValue: string | number | Date | boolean = "";
+      let bValue: string | number | Date | boolean = "";
+
+      switch (sortField) {
+        case "name":
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case "parc":
+          aValue = a.parc.name;
+          bValue = b.parc.name;
+          break;
+        case "site":
+          aValue = a.site.name;
+          bValue = b.site.name;
+          break;
+        case "status":
+          aValue = a.active;
+          bValue = b.active;
+          break;
+        case "pannesCount":
+          aValue = a._count?.pannes || 0;
+          bValue = b._count?.pannes || 0;
+          break;
+        case "createdAt":
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+        default:
+          aValue = a.name;
+          bValue = b.name;
+      }
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortDirection === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      } else if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+      } else if (typeof aValue === "boolean" && typeof bValue === "boolean") {
+        return sortDirection === "asc"
+          ? aValue === bValue
+            ? 0
+            : aValue
+            ? -1
+            : 1
+          : aValue === bValue
+          ? 0
+          : aValue
+          ? 1
+          : -1;
+      } else if (aValue instanceof Date && bValue instanceof Date) {
+        return sortDirection === "asc"
+          ? aValue.getTime() - bValue.getTime()
+          : bValue.getTime() - aValue.getTime();
+      }
+      return 0;
+    });
+
+    return filtered;
+  }, [enginsQuery.data, globalSearch, columnFilters, sortField, sortDirection]);
+
+  const totalItems: number = filteredAndSortedEngins.length;
+  const showAll: boolean = itemsPerPage === -1;
+  const totalPages: number = showAll ? 1 : Math.ceil(totalItems / itemsPerPage);
+  const startIndex: number = showAll ? 0 : (currentPage - 1) * itemsPerPage;
+  const paginatedEngins: Engin[] = showAll
+    ? filteredAndSortedEngins
+    : filteredAndSortedEngins.slice(startIndex, startIndex + itemsPerPage);
+
+  const displayError: string | null =
+    error || enginsQuery.error?.message || null;
+
+  const hasActiveFilters: boolean =
+    globalSearch !== "" ||
+    Object.values(columnFilters).some((filter) => filter !== "");
+
+  const handleExportToExcel = (): void => {
+    try {
+      const exportData = filteredAndSortedEngins.map((engin: Engin) => ({
+        Nom: engin.name,
+        Parc: engin.parc.name,
+        "Type de parc": engin.parc.typeparc.name,
+        Site: engin.site.name,
+        Statut: engin.active ? "Actif" : "Inactif",
+        "Heures chassis initiales": engin.initialHeureChassis || 0,
+        "Nombre de pannes": engin._count?.pannes || 0,
+        "Date de création": new Date(engin.createdAt).toLocaleDateString(
+          "fr-FR"
+        ),
+        "Dernière modification": new Date(engin.updatedAt).toLocaleDateString(
+          "fr-FR"
+        ),
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Engins");
+
+      XLSX.writeFile(
+        workbook,
+        `engins_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'export Excel:", error);
+      setError("Erreur lors de l'export des données");
+    }
+  };
+
+  const SortableHeader = ({
+    field,
+    children,
+  }: {
+    field: SortField;
+    children: React.ReactNode;
+  }) => (
+    <TableHead
+      className="cursor-pointer hover:bg-muted/50 transition-colors"
+      onClick={() => handleSort(field)}
+    >
+      <div className="flex items-center gap-1 group">
+        {children}
+        <div className="flex flex-col">
+          <ChevronUp
+            className={`h-3 w-3 -mb-1 ${
+              sortField === field && sortDirection === "asc"
+                ? "text-primary"
+                : "text-muted-foreground opacity-40"
+            }`}
+          />
+          <ChevronDown
+            className={`h-3 w-3 -mt-1 ${
+              sortField === field && sortDirection === "desc"
+                ? "text-primary"
+                : "text-muted-foreground opacity-40"
+            }`}
+          />
+        </div>
+      </div>
+    </TableHead>
+  );
+
+  if (
+    enginsQuery.isLoading ||
+    parcsQuery.isLoading ||
+    sitesQuery.isLoading ||
+    typeparcsQuery.isLoading
+  ) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-10">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Truck className="h-8 w-8" />
+            Gestion des engins
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gérez les engins miniers et leurs affectations
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportToExcel}
+            disabled={filteredAndSortedEngins.length === 0}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Exporter Excel
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvel engin
+          </Button>
+        </div>
+      </div>
+
+      {displayError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{displayError}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="mb-6 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Rechercher par nom, parc ou site..."
+              value={globalSearch}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setGlobalSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="pl-10"
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearFilters}
+              className="flex items-center gap-2"
+            >
+              <X className="h-4 w-4" />
+              Effacer les filtres
+            </Button>
+          )}
+        </div>
+
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Filter className="h-4 w-4" />
+            <span>Filtres actifs</span>
+            {globalSearch && (
+              <Badge variant="secondary" className="text-xs">
+                Recherche: "{globalSearch}"
+              </Badge>
+            )}
+            {Object.entries(columnFilters).map(
+              ([key, value]) =>
+                value && (
+                  <Badge key={key} variant="secondary" className="text-xs">
+                    {key}: "{value}"
+                  </Badge>
+                )
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Afficher</span>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value: string) => {
+                const newItemsPerPage = value === "all" ? -1 : Number(value);
+                setItemsPerPage(newItemsPerPage);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="all">Tout afficher</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground">
+              {showAll ? "éléments" : "éléments par page"}
+            </span>
+          </div>
+          <span className="text-sm text-muted-foreground">
+            {totalItems} engin(s) trouvé(s)
+            {!showAll &&
+              totalPages > 1 &&
+              ` • Page ${currentPage}/${totalPages}`}
+          </span>
+        </div>
+
+        {filteredAndSortedEngins.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {filteredAndSortedEngins.length} ligne(s) exportable(s)
+          </div>
+        )}
+      </div>
+
+      <div className="border rounded-lg bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <SortableHeader field="name">
+                <div className="space-y-2">
+                  <div className="font-medium">Nom</div>
+                  <Input
+                    ref={(el: HTMLInputElement | null) => {
+                      columnFilterRefs.current.name = el;
+                    }}
+                    placeholder="Filtrer..."
+                    value={columnFilters.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleColumnFilter("name", e.target.value)
+                    }
+                    className="h-7 text-xs"
+                    onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+                      e.stopPropagation()
+                    }
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                </div>
+              </SortableHeader>
+
+              <SortableHeader field="parc">
+                <div className="space-y-2">
+                  <div className="font-medium">Parc</div>
+                  <Input
+                    ref={(el: HTMLInputElement | null) => {
+                      columnFilterRefs.current.parc = el;
+                    }}
+                    placeholder="Filtrer..."
+                    value={columnFilters.parc}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleColumnFilter("parc", e.target.value)
+                    }
+                    className="h-7 text-xs"
+                    onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+                      e.stopPropagation()
+                    }
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                </div>
+              </SortableHeader>
+
+              <SortableHeader field="site">
+                <div className="space-y-2">
+                  <div className="font-medium">Site</div>
+                  <Input
+                    ref={(el: HTMLInputElement | null) => {
+                      columnFilterRefs.current.site = el;
+                    }}
+                    placeholder="Filtrer..."
+                    value={columnFilters.site}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleColumnFilter("site", e.target.value)
+                    }
+                    className="h-7 text-xs"
+                    onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+                      e.stopPropagation()
+                    }
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                </div>
+              </SortableHeader>
+
+              <SortableHeader field="status">
+                <div className="space-y-2">
+                  <div className="font-medium">Statut</div>
+                  <Input
+                    ref={(el: HTMLInputElement | null) => {
+                      columnFilterRefs.current.status = el;
+                    }}
+                    placeholder="actif/inactif"
+                    value={columnFilters.status}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      handleColumnFilter("status", e.target.value)
+                    }
+                    className="h-7 text-xs"
+                    onClick={(e: React.MouseEvent<HTMLInputElement>) =>
+                      e.stopPropagation()
+                    }
+                    onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                </div>
+              </SortableHeader>
+
+              <SortableHeader field="pannesCount">
+                <span className="font-medium">Pannes</span>
+              </SortableHeader>
+
+              <SortableHeader field="createdAt">
+                <span className="font-medium">Date création</span>
+              </SortableHeader>
+
+              <TableHead className="text-right">
+                <span className="font-medium">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedEngins.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="text-center py-10 text-muted-foreground"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Truck className="h-12 w-12 opacity-20" />
+                    {enginsQuery.data?.length === 0
+                      ? "Aucun engin trouvé"
+                      : "Aucun résultat correspondant aux filtres"}
+                    {filteredAndSortedEngins.length === 0 &&
+                      enginsQuery.data &&
+                      enginsQuery.data.length > 0 && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleClearFilters}
+                          className="mt-2"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Effacer les filtres
+                        </Button>
+                      )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedEngins.map((engin: Engin) => (
+                <TableRow key={engin.id} className="hover:bg-muted/50">
+                  <TableCell className="font-medium">{engin.name}</TableCell>
+                  <TableCell>
+                    <div>
+                      <div>{engin.parc.name}</div>
+                      <Badge variant="outline" className="text-xs mt-1">
+                        {engin.parc.typeparc.name}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{engin.site.name}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={engin.active ? "default" : "secondary"}>
+                      {engin.active ? "Actif" : "Inactif"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {engin._count?.pannes || 0} panne(s)
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(engin.createdAt).toLocaleDateString("fr-FR")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(engin)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(engin)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {!showAll && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+          <div className="text-sm text-muted-foreground">
+            Affichage de <strong>{startIndex + 1}</strong> à{" "}
+            <strong>{Math.min(startIndex + itemsPerPage, totalItems)}</strong>{" "}
+            sur <strong>{totalItems}</strong> engins
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev: number) => Math.max(prev - 1, 1))
+              }
+              disabled={currentPage === 1}
+              className="flex items-center gap-1"
+            >
+              <ChevronDown className="h-4 w-4 rotate-90" />
+              Précédent
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                let pageNum: number;
+                if (totalPages <= 7) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 4) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 3) {
+                  pageNum = totalPages - 6 + i;
+                } else {
+                  pageNum = currentPage - 3 + i;
+                }
+
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="w-8 h-8 p-0"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev: number) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1"
+            >
+              Suivant
+              <ChevronUp className="h-4 w-4 rotate-90" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <EnginModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        engin={selectedEngin}
+        parcs={parcsQuery.data || []}
+        sites={sitesQuery.data || []}
+        typeparcs={typeparcsQuery.data || []} // ← Ajouté
+        createEngin={createEngin}
+        updateEngin={updateEngin}
+      />
+
+      <DeleteEnginModal
+        open={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        engin={selectedEngin}
+        deleteEngin={deleteEngin}
+      />
+    </div>
+  );
+}

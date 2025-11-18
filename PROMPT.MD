@@ -538,7 +538,10 @@ updatedAt DateTime? @updatedAt
 }
 
 ##################
-me faire la page Niveau_urgencesPage qui gère l'Origine des niveau_urgences
+me faire la page SaisiePerformancesPage qui gère l'Origine des saisiehrms, saisiehims et saisielubrifiants (saisie par engin, pour chaque engin et chaque jour il sera saisie : hrm une seule fois, et saisiehim pour plusieurs pannes, et la saisie de consommation des lubrifiants, donc les étapes à respecer pour faire la faire est :
+1-Saisir hrm
+2-saisie him pas panne
+3-saisir consommation lubrifiants par him s'il existe)
 avec fonctionnalités ci-dessous :
 
 - utilise shadcn/ui avec thème adapté au mode "dark/light" uniquement

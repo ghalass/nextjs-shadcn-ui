@@ -584,3 +584,79 @@ export interface EnginStats {
   dernierIncident?: string;
   statut: "actif" | "en-panne" | "maintenance";
 }
+
+export interface OrigineSaisie {
+  id: string;
+  name: string;
+  description?: string;
+  code: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Saisiehrm {
+  id: string;
+  du: string;
+  enginId: string;
+  siteId: string;
+  hrm: number;
+  origineSaisieId?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  engin?: Engin;
+  site?: Site;
+  origineSaisie?: OrigineSaisie;
+  saisiehim?: Saisiehim[];
+  _count?: {
+    saisiehim: number;
+  };
+}
+
+export interface Saisiehim {
+  id: string;
+  panneId: string;
+  him: number;
+  ni: number;
+  saisiehrmId: string;
+  enginId?: string;
+  obs?: string;
+  origineSaisieId?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  panne?: Panne;
+  saisiehrm?: Saisiehrm;
+  engin?: Engin;
+  origineSaisie?: OrigineSaisie;
+  saisielubrifiants?: Saisielubrifiant[];
+}
+
+export interface Saisielubrifiant {
+  id: string;
+  lubrifiantId: string;
+  qte: number;
+  obs?: string;
+  saisiehimId: string;
+  typeconsommationlubId?: string;
+  origineSaisieId?: string;
+  createdAt: string;
+  updatedAt: string;
+
+  // Relations
+  lubrifiant?: Lubrifiant;
+  saisiehim?: Saisiehim;
+  typeconsommationlub?: Typeconsommationlub;
+  origineSaisie?: OrigineSaisie;
+}
+
+export interface PerformanceFilters {
+  type: "saisiehrm" | "saisiehim" | "saisielubrifiant";
+  dateDebut?: Date;
+  dateFin?: Date;
+  engin?: string;
+  site?: string;
+  origineSaisie?: string;
+}

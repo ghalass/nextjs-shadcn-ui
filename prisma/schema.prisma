@@ -444,8 +444,10 @@ model Saisiehrm {
   site      Site        @relation(fields: [siteId], references: [id], onDelete: Restrict)
   saisiehim Saisiehim[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?      @updatedAt
+  origineSaisie   OrigineSaisie? @relation(fields: [origineSaisieId], references: [id])
+  origineSaisieId String?
 
   @@unique([du, enginId])
   @@map("saisiehrms")
@@ -466,8 +468,10 @@ model Saisiehim {
   engin             Engin?             @relation(fields: [enginId], references: [id], onDelete: Restrict)
   saisielubrifiants Saisielubrifiant[]
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?      @updatedAt
+  origineSaisie   OrigineSaisie? @relation(fields: [origineSaisieId], references: [id])
+  origineSaisieId String?
 
   @@unique([panneId, saisiehrmId])
   @@map("saisiehims")
@@ -499,8 +503,10 @@ model Saisielubrifiant {
   saisiehim           Saisiehim            @relation(fields: [saisiehimId], references: [id], onDelete: Restrict)
   typeconsommationlub Typeconsommationlub? @relation(fields: [typeconsommationlubId], references: [id], onDelete: Restrict)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime?      @updatedAt
+  origineSaisie   OrigineSaisie? @relation(fields: [origineSaisieId], references: [id])
+  origineSaisieId String?
 
   @@map("saisielubrifiants")
 }
@@ -526,4 +532,21 @@ model Objectif {
 
   @@unique([annee, parcId, siteId])
   @@map("objectifs")
+}
+
+model OrigineSaisie {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  code        String  @unique // Code unique pour identification
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  saisiehrms        Saisiehrm[]
+  saisiehims        Saisiehim[]
+  saisielubrifiants Saisielubrifiant[]
+
+  @@map("origine_saisies")
 }
